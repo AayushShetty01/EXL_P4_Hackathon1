@@ -27,10 +27,10 @@ The full specification, including every API contract, is in [`docs/PROJECT_CONTE
 | `README.md` | Start here: what the project is, repository map, how to run it | Varun |
 | `.env.example` | Every setting, each with a comment | Varun |
 | `.gitignore` | Files git never tracks | Varun |
-| `docs/` | Project documents. Today: `PROJECT_CONTEXT.md` | Varun |
+| `docs/` | Project documents: `PROJECT_CONTEXT.md` (specification and contracts), `ARCHITECTURE.md`, `RESPONSIBLE_AI.md` | Varun |
 | `contracts/` | Example request and response for every API, generated from the project context | Varun |
 | `model_estate/` | The sample bank: legacy models, data, golden outputs | Dhrishit |
-| `factory_core/` | Service 1: orchestrator, agents, API for the dashboard | Varun |
+| `factory_core/` | Service 1: orchestrator, agents, human gates, audit trail, API for the dashboard | Varun |
 | `redev_engine/` | Service 2: SAS and R to Python rebuild, parity proof | Dhrishit |
 | `validation_lab/` | Service 3: validation, fairness, monitoring, report | Harshit |
 | `factory_console/` | Service 4: web dashboard | Aayush |
@@ -38,35 +38,65 @@ The full specification, including every API contract, is in [`docs/PROJECT_CONTE
 
 Each folder is created and maintained by its owner.
 
+## Architecture
+
+```
+Browser: factory_console (React, port 5173)
+   => factory_core (FastAPI, port 8000): REST API, LangGraph pipeline with human gates, SQLite, audit trail
+         => redev_engine (FastAPI, port 8001): rebuild and parity proof
+         => validation_lab (FastAPI, port 8002): validation, report, monitoring (no LLM)
+         => LLM provider (any OpenAI compatible endpoint)
+   redev_engine => LLM provider
+   The Python services read model_estate/ and read and write artifacts/ on the same disk.
+```
+
+The dashboard talks only to factory_core. Services exchange file paths, not file contents. The diagram, the run sequence and where each design rule is enforced are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 ## Team and ownership
 
-| Member | Service | Owns these paths (and nothing else) | Port | Branch |
-|---|---|---|---|---|
-| Varun | factory_core: agent orchestrator, inventory, documentation agents, governance API. Integration lead. | `factory_core/`, `contracts/`, `docs/`, root files | 8000 | `feat/factory_core_varun` |
-| Dhrishit | redev_engine: the sample model estate, SAS and R to Python rebuild, parity proof. Repository owner. | `redev_engine/`, `model_estate/` | 8001 | `feat/redev_engine` |
-| Harshit | validation_lab: validation metrics, fairness, monitoring, report rendering | `validation_lab/` | 8002 | `feat/validation_lab` |
-| Aayush | factory_console: the web dashboard | `factory_console/` | 5173 | `feat/factory_console` |
+| Member | Service | Owns these paths (and nothing else) | Port |
+|---|---|---|---|
+| Varun | factory_core: agent orchestrator, inventory, documentation agents, governance API. Integration lead. | `factory_core/`, `contracts/`, `docs/`, root files | 8000 |
+| Dhrishit | redev_engine: the sample model estate, SAS and R to Python rebuild, parity proof. Repository owner. | `redev_engine/`, `model_estate/` | 8001 |
+| Harshit | validation_lab: validation metrics, fairness, monitoring, report rendering | `validation_lab/` | 8002 |
+| Aayush | factory_console: the web dashboard | `factory_console/` | 5173 |
 
-Each member creates and changes files only inside their own paths, works on their own branch and commits by hand with one plain line in the form `[service] what changed`. A problem in someone else's folder goes to its owner.
+Each member works on `main` in their own fork of this repository, creates and changes files only inside their own paths, and commits by hand with one plain line in the form `[service] what changed`. Work reaches this repository through a pull request from the fork's `main`, which the repository owner merges. A problem in someone else's folder goes to its owner.
 
-## How to run
-
-The services are being built. The commands below are the intended entry points; each service README is the reference for its own setup and is updated as the service lands.
+## Quick start
 
 Prerequisites: Python 3.11 or newer, Node.js with npm.
 
-```
-cp .env.example .env        # then fill in LLM_API_KEY and LLM_MODEL, or set LLM_MODE=replay
-```
+1. Settings: `cp .env.example .env`. With a key, fill in `LLM_API_KEY` and `LLM_MODEL` and keep `LLM_MODE=live`. Without a key, set `LLM_MODE=replay` to use the recorded replies in `factory_core/llm_cache/` and `redev_engine/llm_cache/`.
+2. Start the services, each in its own terminal (commands below).
+3. Open the dashboard at http://localhost:5173.
+4. Optional: seed every model with automatic approvals: `cd factory_core && python -m scripts.seed_demo`.
 
-| Service | Port | Start command, run inside the service folder |
+**Replay mode, no key.** Every live LLM reply is stored, keyed by the model and the prompt. After one recorded run is committed, anyone can repeat it with `LLM_MODE=replay`: no key and no network. A prompt that was never recorded stops its stage with a clear message instead of calling a provider.
+
+**factory_core alone.** With `USE_STUBS=true`, factory_core answers the redev_engine and validation_lab calls from `contracts/examples/`, so the whole pipeline can be clicked through without the other two services.
+
+| Service | Port | Start, inside the service folder |
 |---|---|---|
-| factory_core | 8000 | `uvicorn app.main:app --port 8000` |
-| redev_engine | 8001 | `uvicorn app.main:app --port 8001` |
-| validation_lab | 8002 | `uvicorn app.main:app --port 8002` |
-| factory_console | 5173 | `npm install`, then `npm run dev` |
+| factory_core | 8000 | `python3.11 -m venv .venv`, `source .venv/bin/activate`, `pip install -r requirements.txt`, `uvicorn app.main:app --port 8000` |
+| redev_engine | 8001 | see `redev_engine/README.md` |
+| validation_lab | 8002 | see `validation_lab/README.md` |
+| factory_console | 5173 | see `factory_console/README.md` |
 
-The dashboard talks only to factory_core. factory_core calls redev_engine and validation_lab. Every service can also start on its own with stub or sample data that follows `contracts/examples/`.
+## Environment variables
+
+All settings live in one `.env` file at the repository root; [`.env.example`](.env.example) lists each one with a comment. The main ones:
+
+| Variable | Meaning |
+|---|---|
+| `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` | The OpenAI compatible LLM endpoint used by factory_core and redev_engine |
+| `LLM_MODEL_VALIDATOR` | Optional different model for the validator agent, for validation independence |
+| `LLM_MODE` | `live` (cache, then provider) or `replay` (cache only, no key) |
+| `USE_STUBS` | `true` lets factory_core run without redev_engine and validation_lab |
+| `REDEV_ENGINE_URL`, `VALIDATION_LAB_URL` | Service addresses |
+| `ESTATE_DIR`, `ARTIFACTS_DIR` | Model estate and run output folders, relative to the repository root |
+
+The dashboard keeps its own settings in `factory_console/.env`.
 
 ## Contracts
 
@@ -77,6 +107,23 @@ python contracts/extract_examples.py
 python contracts/extract_examples.py --check
 ```
 
-## Data
+## Data sources and licences
 
 Public or synthetic data only, never personal data. Model owners appear as role titles.
+
+| Model | Data | Licence |
+|---|---|---|
+| M001 credit card PD scorecard (SAS) | UCI Default of Credit Card Clients, 30,000 rows: https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients | CC BY 4.0 |
+| M002 personal loan PD (R) | UCI Statlog (German Credit Data), 1,000 rows: https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data | CC BY 4.0 |
+| M003 card transaction fraud (Python) | Synthetic, generated by a seeded script | Synthetic |
+| M004 risk based loan pricing (SAS) | No data | Not applicable |
+
+## Limitations
+
+* Parity proves equivalence on the tested records, not on every possible input.
+* The "oot" sample of M001 and M002 is a random holdout, not a true out of time sample. Monitoring batches are simulated.
+* The Taiwan (2005) and German (1994) datasets are not UK portfolios. All thresholds are illustrative defaults, not regulatory limits.
+* The SS1/23 matrix is a simplified team mapping, not a legal or regulatory assessment.
+* Generated documents, narratives and reports are drafts for expert review; a human signs every gate.
+
+The Responsible AI note is in [`docs/RESPONSIBLE_AI.md`](docs/RESPONSIBLE_AI.md).
