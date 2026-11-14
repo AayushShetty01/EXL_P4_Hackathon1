@@ -1,0 +1,20 @@
+{
+  "model_id": "M001",
+  "data_path": "model_estate/M001_cc_pd_scorecard_sas/data/oot.csv",
+  "scores_path": "artifacts/M001/redevelop/scored_oot.csv",
+  "id_col": "ID",
+  "target_col": "default_flag",
+  "pd_col": "pd",
+  "score_col": "score",
+  "feature_cols": [
+    "PAY_0",
+    "LIMIT_BAL",
+    "BILL_AMT1",
+    "PAY_AMT1"
+  ],
+  "n_batches": 6,
+  "batch_size": 3000,
+  "drift_start_batch": 4,
+  "drift_strength": 0.5,
+  "seed": 42
+}

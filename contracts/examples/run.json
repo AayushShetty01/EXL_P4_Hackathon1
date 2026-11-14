@@ -1,0 +1,75 @@
+{
+  "run_id": "run_M001_001",
+  "model_id": "M001",
+  "status": "AWAITING_REVIEW",
+  "current_stage": "document",
+  "auto_approve": false,
+  "stages": [
+    {
+      "stage": "discover",
+      "status": "APPROVED",
+      "started_at": "2026-11-15T10:02:11Z",
+      "finished_at": "2026-11-15T10:02:33Z",
+      "duration_seconds": 21.4,
+      "summary": "Inventory record created. Tier 1.",
+      "skip_reason": null,
+      "error": null,
+      "gate": {
+        "decision": "approve",
+        "reviewer": "varun",
+        "role": "owner",
+        "comment": "Looks right",
+        "decided_at": "2026-11-15T10:04:02Z",
+        "review_seconds": 89
+      }
+    },
+    {
+      "stage": "document",
+      "status": "AWAITING_REVIEW",
+      "started_at": "2026-11-15T10:04:03Z",
+      "finished_at": "2026-11-15T10:05:40Z",
+      "duration_seconds": 97.0,
+      "summary": "10 sections, 42 claims, 40 verified. 4 differences against the 2021 document.",
+      "skip_reason": null,
+      "error": null,
+      "gate": null
+    },
+    {
+      "stage": "redevelop",
+      "status": "PENDING",
+      "started_at": null,
+      "finished_at": null,
+      "duration_seconds": null,
+      "summary": null,
+      "skip_reason": null,
+      "error": null,
+      "gate": null
+    },
+    {
+      "stage": "validate",
+      "status": "PENDING",
+      "started_at": null,
+      "finished_at": null,
+      "duration_seconds": null,
+      "summary": null,
+      "skip_reason": null,
+      "error": null,
+      "gate": null
+    },
+    {
+      "stage": "monitor",
+      "status": "PENDING",
+      "started_at": null,
+      "finished_at": null,
+      "duration_seconds": null,
+      "summary": null,
+      "skip_reason": null,
+      "error": null,
+      "gate": null
+    }
+  ],
+  "started_at": "2026-11-15T10:02:11Z",
+  "finished_at": null,
+  "total_agent_seconds": 118.4,
+  "total_review_seconds": 89
+}

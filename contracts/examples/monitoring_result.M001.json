@@ -1,0 +1,64 @@
+{
+  "model_id": "M001",
+  "status": "COMPLETED",
+  "simulated": true,
+  "reference_sample": "dev",
+  "batches": [
+    {
+      "batch": "2026_01",
+      "n": 3000,
+      "psi_score": 0.011,
+      "max_csi": {
+        "feature": "PAY_0",
+        "csi": 0.009
+      },
+      "auc": 0.765,
+      "observed_default_rate": 0.22,
+      "mean_pd": 0.209,
+      "alert": "GREEN"
+    },
+    {
+      "batch": "2026_04",
+      "n": 3000,
+      "psi_score": 0.134,
+      "max_csi": {
+        "feature": "PAY_0",
+        "csi": 0.171
+      },
+      "auc": 0.752,
+      "observed_default_rate": 0.251,
+      "mean_pd": 0.233,
+      "alert": "AMBER"
+    },
+    {
+      "batch": "2026_05",
+      "n": 3000,
+      "psi_score": 0.291,
+      "max_csi": {
+        "feature": "PAY_0",
+        "csi": 0.334
+      },
+      "auc": 0.731,
+      "observed_default_rate": 0.297,
+      "mean_pd": 0.262,
+      "alert": "RED"
+    }
+  ],
+  "alerts": [
+    {
+      "batch": "2026_05",
+      "level": "RED",
+      "rule": "score PSI above 0.25",
+      "value": 0.291
+    }
+  ],
+  "revalidation_triggered": true,
+  "trigger_reason": "Score PSI above 0.25 in batch 2026_05",
+  "thresholds_used": {
+    "psi_green": 0.1,
+    "psi_amber": 0.25,
+    "auc_drop_trigger": 0.05
+  },
+  "result_path": "artifacts/M001/monitoring/result.json",
+  "error": null
+}

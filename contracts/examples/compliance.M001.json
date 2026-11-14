@@ -1,0 +1,45 @@
+{
+  "model_id": "M001",
+  "disclaimer": "Simplified team mapping to the five SS1/23 principles for demonstration. Not a legal or regulatory assessment.",
+  "principles": [
+    {
+      "principle": "P1",
+      "title": "Model identification and model risk classification",
+      "items": [
+        {
+          "id": "P1_inventory",
+          "expectation": "The model is recorded in the inventory with owner, purpose and dependencies",
+          "status": "MET",
+          "evidence_path": "artifacts/M001/discover/inventory_record.json",
+          "note": null
+        },
+        {
+          "id": "P1_tiering",
+          "expectation": "A risk tier is assigned from materiality and complexity",
+          "status": "MET",
+          "evidence_path": "artifacts/M001/discover/inventory_record.json",
+          "note": null
+        }
+      ]
+    },
+    {
+      "principle": "P2",
+      "title": "Governance",
+      "items": [
+        {
+          "id": "P2_board",
+          "expectation": "Board and senior management oversight of the framework",
+          "status": "OUT_OF_SCOPE",
+          "evidence_path": null,
+          "note": "Organisational control, outside a prototype"
+        }
+      ]
+    }
+  ],
+  "coverage": {
+    "met": 11,
+    "partial": 2,
+    "not_met": 1,
+    "out_of_scope": 4
+  }
+}

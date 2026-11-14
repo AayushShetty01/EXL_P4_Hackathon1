@@ -1,0 +1,43 @@
+{
+  "chain_valid": true,
+  "events": [
+    {
+      "seq": 17,
+      "ts": "2026-11-15T10:04:02Z",
+      "model_id": "M001",
+      "run_id": "run_M001_001",
+      "stage": "discover",
+      "actor_type": "human",
+      "actor": "varun",
+      "action": "gate_decision",
+      "detail": {
+        "decision": "approve",
+        "role": "owner",
+        "comment": "Looks right"
+      },
+      "prev_hash": "77aa...",
+      "hash": "c3d1..."
+    },
+    {
+      "seq": 18,
+      "ts": "2026-11-15T10:04:09Z",
+      "model_id": "M001",
+      "run_id": "run_M001_001",
+      "stage": "document",
+      "actor_type": "agent",
+      "actor": "documentation_agent",
+      "action": "llm_call",
+      "detail": {
+        "step": "section:methodology",
+        "model": "provider/model-id",
+        "prompt_sha256": "ab12...",
+        "input_tokens": 6120,
+        "output_tokens": 940,
+        "latency_ms": 7400,
+        "cached": false
+      },
+      "prev_hash": "c3d1...",
+      "hash": "09be..."
+    }
+  ]
+}

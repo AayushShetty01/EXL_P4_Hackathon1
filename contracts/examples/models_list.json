@@ -1,0 +1,25 @@
+{
+  "models": [
+    {
+      "model_id": "M001",
+      "model_name": "Credit Card PD Scorecard",
+      "model_type": "credit_pd",
+      "language": "SAS",
+      "algorithm": "Logistic regression scorecard on WoE variables",
+      "business_line": "Cards",
+      "tier": "Tier 1",
+      "doc_status": "OUTDATED",
+      "last_validated": "2023-02-14",
+      "pipeline_status": {
+        "discover": "APPROVED",
+        "document": "AWAITING_REVIEW",
+        "redevelop": "PENDING",
+        "validate": "PENDING",
+        "monitor": "PENDING"
+      },
+      "overall_rating": null,
+      "revalidation_required": false,
+      "active_run_id": "run_M001_001"
+    }
+  ]
+}

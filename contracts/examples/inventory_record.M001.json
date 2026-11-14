@@ -1,0 +1,75 @@
+{
+  "model_id": "M001",
+  "model_name": "Credit Card PD Scorecard",
+  "model_type": "credit_pd",
+  "purpose": "Estimates the probability that a credit card customer defaults next month. Used for approve or decline decisions.",
+  "business_line": "Cards",
+  "model_owner": "Head of Cards Credit Risk",
+  "language": "SAS",
+  "algorithm": "Logistic regression scorecard on WoE variables",
+  "target_variable": "default_flag",
+  "input_variables": [
+    {
+      "name": "PAY_0",
+      "description": "Repayment status in the most recent month",
+      "transformation": "WoE bins"
+    }
+  ],
+  "outputs": [
+    "pd",
+    "score",
+    "decision"
+  ],
+  "upstream_dependencies": [],
+  "downstream_uses": [
+    "Credit card approve or decline decision"
+  ],
+  "exposure_gbp_m": 1850,
+  "regulatory_use": "IRB",
+  "customer_facing": true,
+  "tiering": {
+    "tier": "Tier 1",
+    "materiality_score": 3,
+    "complexity_score": 1,
+    "rationale": [
+      "Exposure above GBP 1bn",
+      "Used for regulatory capital",
+      "Customer facing credit decision"
+    ]
+  },
+  "doc_status": "OUTDATED",
+  "doc_last_updated": "2021-03-01",
+  "last_code_change": "2023-06-20",
+  "last_validated": "2023-02-14",
+  "next_validation_due": "2024-02-14",
+  "source_files": [
+    {
+      "path": "model_estate/M001_cc_pd_scorecard_sas/code/01_prepare.sas",
+      "kind": "code",
+      "lines": 120,
+      "sha256": "9f2c..."
+    }
+  ],
+  "field_evidence": {
+    "algorithm": {
+      "file": "model_estate/M001_cc_pd_scorecard_sas/code/02_train.sas",
+      "start_line": 12,
+      "end_line": 19,
+      "quote": "proc logistic data=work.dev_woe descending;",
+      "status": "VERIFIED"
+    }
+  },
+  "open_questions": [
+    "Who approved the 2023 change to the cutoff?"
+  ],
+  "pipeline_status": {
+    "discover": "APPROVED",
+    "document": "AWAITING_REVIEW",
+    "redevelop": "PENDING",
+    "validate": "PENDING",
+    "monitor": "PENDING"
+  },
+  "revalidation_required": false,
+  "created_at": "2026-11-15T10:02:11Z",
+  "updated_at": "2026-11-15T10:05:40Z"
+}
