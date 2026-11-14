@@ -1,0 +1,42 @@
+{
+  "model_id": "M004",
+  "model_name": "Risk-Based Loan Pricing",
+  "model_type": "pricing",
+  "purpose": "Illustrative sample: estimates a risk-based interest rate using rules and regression.",
+  "business_line": "Personal Lending",
+  "model_owner": "Head of Lending Pricing",
+  "language": "SAS",
+  "algorithm": "Rules and linear regression",
+  "target_variable": null,
+  "input_variables": [],
+  "outputs": ["interest_rate"],
+  "upstream_dependencies": [],
+  "downstream_uses": ["Loan pricing"],
+  "exposure_gbp_m": null,
+  "regulatory_use": "Pricing",
+  "customer_facing": true,
+  "tiering": {
+    "tier": "Tier 3",
+    "materiality_score": 1,
+    "complexity_score": 1,
+    "rationale": ["Illustrative low materiality and complexity."]
+  },
+  "doc_status": "OUTDATED",
+  "doc_last_updated": "2021-08-10",
+  "last_code_change": null,
+  "last_validated": null,
+  "next_validation_due": null,
+  "source_files": [],
+  "field_evidence": {},
+  "open_questions": ["Confirm the model's target and data dependencies."],
+  "pipeline_status": {
+    "discover": "PENDING",
+    "document": "PENDING",
+    "redevelop": "SKIPPED",
+    "validate": "SKIPPED",
+    "monitor": "SKIPPED"
+  },
+  "revalidation_required": false,
+  "created_at": "2026-11-14T09:00:00Z",
+  "updated_at": "2026-11-14T09:00:00Z"
+}
