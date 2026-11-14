@@ -106,8 +106,10 @@ def redevelop_stage(work: StageWork) -> str:
         use_pitfall_library=True,
     )
     result = work.context.services(work.recorder).redevelop(request)
-    for trace in result.llm_trace:
-        work.recorder.llm_call("redev_engine", trace.model_dump(mode="json"))
+    if not work.context.settings.use_stubs:
+        # A stub answer carries example traces of calls that never happened, so only real ones are audited.
+        for trace in result.llm_trace:
+            work.recorder.llm_call("redev_engine", trace.model_dump(mode="json"))
     save_stage_output(
         work.session, model.model_id, work.run.run_id, "redevelop", "redevelopment", result.model_dump(mode="json")
     )

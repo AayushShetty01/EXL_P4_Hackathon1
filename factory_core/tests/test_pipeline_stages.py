@@ -91,3 +91,30 @@ def test_unreachable_service_fails_the_stage_clearly(hero_estate) -> None:
         decide(client, run_id, "discover", "model_owner", role="owner")
         error = client.get(f"/api/runs/{run_id}").json()["stages"][2]["error"]
     assert error.startswith("redev_engine: not reachable") and "USE_STUBS=true" in error
+
+
+def redev_engine_llm_calls(client: TestClient) -> int:
+    """Number of llm_call events recorded for redev_engine."""
+    events = client.get("/api/audit", params={"model_id": "M001", "limit": 1000}).json()["events"]
+    return sum(event["action"] == "llm_call" and event["actor"] == "redev_engine" for event in events)
+
+
+def test_redev_engine_calls_are_audited_only_when_they_happened(hero_estate, pipeline_client: TestClient) -> None:
+    """Stub answers add no LLM call events; a real redev_engine reply adds one per trace entry."""
+    run_id = pipeline_client.post("/api/models/M001/runs", json={"stages": ["discover", "redevelop"]}).json()["run_id"]
+    decide(pipeline_client, run_id, "discover", "model_owner", role="owner")
+    assert redev_engine_llm_calls(pipeline_client) == 0
+    decide(pipeline_client, run_id, "redevelop", "developer_a")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        """Answer /redevelop like the real service."""
+        return httpx.Response(200, json=load_example("redevelop_result.M001.json"))
+
+    settings = dataclasses.replace(live_settings(hero_estate), use_stubs=False)
+    app = create_app(
+        settings, llm_provider=pipeline_provider(), service_transport=httpx.MockTransport(handler), background=False
+    )
+    with TestClient(app) as client:
+        second = client.post("/api/models/M001/runs", json={"stages": ["redevelop"]}).json()["run_id"]
+        assert client.get(f"/api/runs/{second}").json()["stages"][2]["status"] == "AWAITING_REVIEW"
+        assert redev_engine_llm_calls(client) == len(load_example("redevelop_result.M001.json")["llm_trace"])
