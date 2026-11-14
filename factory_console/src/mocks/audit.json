@@ -1,0 +1,52 @@
+{
+  "chain_valid": true,
+  "events": [
+    {
+      "seq": 1,
+      "ts": "2026-11-14T09:10:00Z",
+      "model_id": "M001",
+      "run_id": "run_M001_sample",
+      "stage": "discover",
+      "actor_type": "system",
+      "actor": "factory_core",
+      "action": "stage_started",
+      "detail": {
+        "note": "Illustrative mock audit event."
+      },
+      "prev_hash": "0000000000000000",
+      "hash": "sample-hash-001"
+    },
+    {
+      "seq": 2,
+      "ts": "2026-11-14T09:10:20Z",
+      "model_id": "M001",
+      "run_id": "run_M001_sample",
+      "stage": "discover",
+      "actor_type": "human",
+      "actor": "Model owner",
+      "action": "gate_decision",
+      "detail": {
+        "decision": "approve",
+        "role": "owner",
+        "comment": "Illustrative mock approval."
+      },
+      "prev_hash": "sample-hash-001",
+      "hash": "sample-hash-002"
+    },
+    {
+      "seq": 3,
+      "ts": "2026-11-14T09:14:00Z",
+      "model_id": "M003",
+      "run_id": "run_M003_sample",
+      "stage": "validate",
+      "actor_type": "agent",
+      "actor": "validation_agent",
+      "action": "stage_completed",
+      "detail": {
+        "note": "Illustrative mock event; not a measured result."
+      },
+      "prev_hash": "sample-hash-002",
+      "hash": "sample-hash-003"
+    }
+  ]
+}

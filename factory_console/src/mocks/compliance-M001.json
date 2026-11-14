@@ -1,0 +1,84 @@
+{
+  "model_id": "M001",
+  "disclaimer": "Illustrative sample only. Simplified team mapping to SS1/23 principles; not a legal or regulatory assessment.",
+  "principles": [
+    {
+      "principle": "P1",
+      "title": "Model identification and model risk classification",
+      "items": [
+        {
+          "id": "P1_inventory",
+          "expectation": "The sample model has an inventory record with an owner and purpose.",
+          "status": "MET",
+          "evidence_path": "artifacts/M001/discover/inventory_record.json",
+          "note": null
+        },
+        {
+          "id": "P1_tiering",
+          "expectation": "An illustrative risk tier is assigned.",
+          "status": "MET",
+          "evidence_path": "artifacts/M001/discover/inventory_record.json",
+          "note": null
+        }
+      ]
+    },
+    {
+      "principle": "P2",
+      "title": "Governance",
+      "items": [
+        {
+          "id": "P2_board",
+          "expectation": "Senior management oversight is evidenced.",
+          "status": "OUT_OF_SCOPE",
+          "evidence_path": null,
+          "note": "Organisational control is outside this sample."
+        }
+      ]
+    },
+    {
+      "principle": "P3",
+      "title": "Model development, implementation and use",
+      "items": [
+        {
+          "id": "P3_documentation",
+          "expectation": "Model documentation is available for human review.",
+          "status": "PARTIAL",
+          "evidence_path": "artifacts/M001/document/model_document.json",
+          "note": "Illustrative sample; one claim needs subject matter review."
+        }
+      ]
+    },
+    {
+      "principle": "P4",
+      "title": "Independent model validation",
+      "items": [
+        {
+          "id": "P4_validation",
+          "expectation": "An independent validation is recorded.",
+          "status": "PARTIAL",
+          "evidence_path": "artifacts/M001/validation/result.json",
+          "note": "Mock values are not real validation evidence."
+        }
+      ]
+    },
+    {
+      "principle": "P5",
+      "title": "Model risk mitigants",
+      "items": [
+        {
+          "id": "P5_monitoring",
+          "expectation": "Monitoring and revalidation are considered.",
+          "status": "PARTIAL",
+          "evidence_path": "artifacts/M001/monitoring/result.json",
+          "note": "Monitoring batches are simulated."
+        }
+      ]
+    }
+  ],
+  "coverage": {
+    "met": 2,
+    "partial": 3,
+    "not_met": 0,
+    "out_of_scope": 1
+  }
+}

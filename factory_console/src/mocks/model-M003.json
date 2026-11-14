@@ -1,0 +1,48 @@
+{
+  "model_id": "M003",
+  "model_name": "Transaction Fraud Detector",
+  "model_type": "fraud",
+  "purpose": "Illustrative sample: estimates whether a card transaction is fraudulent.",
+  "business_line": "Cards",
+  "model_owner": "Head of Fraud Risk",
+  "language": "Python",
+  "algorithm": "Gradient boosting classifier",
+  "target_variable": "fraud_flag",
+  "input_variables": [
+    {
+      "name": "transaction_amount",
+      "description": "Transaction amount",
+      "transformation": "Standardized"
+    }
+  ],
+  "outputs": ["pd", "score", "decision"],
+  "upstream_dependencies": [],
+  "downstream_uses": ["Transaction allow or decline decision"],
+  "exposure_gbp_m": 95,
+  "regulatory_use": "Fraud prevention",
+  "customer_facing": true,
+  "tiering": {
+    "tier": "Tier 2",
+    "materiality_score": 2,
+    "complexity_score": 3,
+    "rationale": ["Illustrative materiality and model complexity."]
+  },
+  "doc_status": "OUTDATED",
+  "doc_last_updated": "2023-06-08",
+  "last_code_change": "2024-01-18",
+  "last_validated": "2024-01-18",
+  "next_validation_due": "2025-01-18",
+  "source_files": [],
+  "field_evidence": {},
+  "open_questions": [],
+  "pipeline_status": {
+    "discover": "APPROVED",
+    "document": "APPROVED",
+    "redevelop": "SKIPPED",
+    "validate": "RUNNING",
+    "monitor": "PENDING"
+  },
+  "revalidation_required": false,
+  "created_at": "2026-11-14T09:00:00Z",
+  "updated_at": "2026-11-14T09:00:00Z"
+}
