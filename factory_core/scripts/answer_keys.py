@@ -1,22 +1,30 @@
 """Reads the hidden answer keys in model_estate/_answer_keys/. Only the two evaluation scripts use this.
 
 The agents and the API can never read these files (the safe file reader blocks them).
-Expected shape of one key, every part optional:
+Shape of one key as the estate writes it, every part optional:
   {"model_id": "M001",
-   "inventory": {"model_type": "credit_pd", "algorithm": "logistic", "input_variables": ["PAY_0", "LIMIT_BAL"]},
-   "doc_discrepancies": [{"topic": "Decision cutoff", "keywords": ["520", "540"], "legacy_line": 88}]}
-A string value matches when one text contains the other (case and spacing ignored); a list is scored by
-recall; {"keywords": [...]} matches when every keyword appears.
+   "expected_inventory": {"model_type": "credit_pd", "algorithm": "Logistic regression scorecard",
+                          "input_variables": ["woe_util", "woe_payr"]},
+   "seeded_doc_differences": [{"id": "D002", "topic": "Decision cutoff",
+       "legacy_evidence": {"file": "model_estate/.../model_document_2021.md", "start_line": 69, "end_line": 69},
+       "code_evidence": {"file": "model_estate/.../03_score.sas", "start_line": 39, "end_line": 39}}]}
+The older names "inventory" and "doc_discrepancies" (with "keywords" or "legacy_line") are read too.
+A string matches when one text contains the other (case and spacing ignored), and otherwise scores the
+share of its words that appear; a list is scored by recall; {"keywords": [...]} matches when every keyword
+appears.
 """
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 from app.config import Settings
 
-INVENTORY_KEYS = ("inventory", "expected_inventory", "fields")
-DISCREPANCY_KEYS = ("doc_discrepancies", "discrepancies", "seeded_discrepancies")
+INVENTORY_KEYS = ("expected_inventory", "inventory", "fields")
+DISCREPANCY_KEYS = ("seeded_doc_differences", "doc_discrepancies", "discrepancies", "seeded_discrepancies")
+WORD_PATTERN = re.compile(r"[a-z0-9]+")
+STOP_WORDS = {"a", "an", "and", "by", "for", "in", "of", "on", "plus", "the", "to", "with"}
 
 
 def load_answer_keys(settings: Settings) -> dict[str, dict[str, Any]]:
@@ -57,3 +65,18 @@ def text_matches(expected: Any, actual: Any) -> bool:
         return all(normalise(keyword) in normalise(actual) for keyword in expected["keywords"])
     expected_text, actual_text = normalise(expected), normalise(actual)
     return expected_text in actual_text or actual_text in expected_text
+
+
+def content_words(value: Any) -> set[str]:
+    """The lower case words of a text, without small joining words such as "on" or "with"."""
+    return {word for word in WORD_PATTERN.findall(str(value).lower()) if word not in STOP_WORDS}
+
+
+def text_score(expected: Any, actual: Any) -> float:
+    """1.0 when the texts match; otherwise the share of the expected words found in the actual text."""
+    if text_matches(expected, actual):
+        return 1.0
+    if isinstance(expected, dict) or actual in (None, "", []):
+        return 0.0
+    wanted = content_words(expected)
+    return round(len(wanted & content_words(actual)) / len(wanted), 3) if wanted else 0.0

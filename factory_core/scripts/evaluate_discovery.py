@@ -2,6 +2,8 @@
 
 Run from the factory_core folder: python -m scripts.evaluate_discovery
 Prints field accuracy per model and overall, and writes artifacts/evaluation/discovery.json for the deck.
+Only fields of the inventory record are scored; other expected fields (such as raw_input_columns) are
+listed as not scored.
 """
 
 import argparse
@@ -11,20 +13,23 @@ from typing import Any
 
 from sqlmodel import Session
 
+from app.api_schemas import InventoryRecord
 from app.config import Settings, load_settings
 from app.database import create_database_engine, latest_stage_output
-from scripts.answer_keys import expected_inventory, load_answer_keys, normalise, text_matches
+from scripts.answer_keys import expected_inventory, load_answer_keys, normalise, text_score
+
+RECORD_FIELDS = set(InventoryRecord.model_fields)
 
 
 def field_score(expected: Any, actual: Any) -> float:
-    """1.0 for a match, the recall for lists, 0.0 otherwise."""
+    """1.0 for a match, the recall for lists, the share of expected words for text, 0.0 otherwise."""
     if isinstance(expected, list):
         found = {normalise(item["name"] if isinstance(item, dict) else item) for item in actual or []}
         wanted = [normalise(item) for item in expected]
         return sum(item in found for item in wanted) / len(wanted) if wanted else 1.0
     if isinstance(expected, (bool, int, float)):
         return float(expected == actual)
-    return float(text_matches(expected, actual))
+    return text_score(expected, actual)
 
 
 def evaluate(settings: Settings) -> dict[str, Any]:
@@ -36,11 +41,18 @@ def evaluate(settings: Settings) -> dict[str, Any]:
         for model_id, content in keys.items():
             record = latest_stage_output(session, model_id, "inventory_record")
             expected = expected_inventory(content)
-            if record is None or not expected:
-                models[model_id] = {"discovered": record is not None, "fields": {}}
+            scorable = {name: value for name, value in expected.items() if name in RECORD_FIELDS}
+            not_scored = sorted(set(expected) - RECORD_FIELDS)
+            if record is None or not scorable:
+                models[model_id] = {"discovered": record is not None, "fields": {}, "not_scored": not_scored}
                 continue
-            scores = {name: field_score(value, record.get(name)) for name, value in expected.items()}
-            models[model_id] = {"discovered": True, "fields": scores, "accuracy": sum(scores.values()) / len(scores)}
+            scores = {name: field_score(value, record.get(name)) for name, value in scorable.items()}
+            models[model_id] = {
+                "discovered": True,
+                "fields": scores,
+                "accuracy": round(sum(scores.values()) / len(scores), 3),
+                "not_scored": not_scored,
+            }
     all_scores = [score for model in models.values() for score in model["fields"].values()]
     overall = round(sum(all_scores) / len(all_scores), 3) if all_scores else None
     return {"models": models, "fields_scored": len(all_scores), "field_accuracy": overall}
@@ -63,6 +75,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{model_id}: accuracy {model['accuracy']:.2f}")
         for name, score in model["fields"].items():
             print(f"  {name:<24} {score:.2f}")
+        if model["not_scored"]:
+            print(f"  not inventory fields, not scored: {', '.join(model['not_scored'])}")
     print(f"Overall field accuracy: {result['field_accuracy']} over {result['fields_scored']} fields")
     target = settings.artifacts_dir / "evaluation" / "discovery.json"
     target.parent.mkdir(parents=True, exist_ok=True)

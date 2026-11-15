@@ -68,6 +68,16 @@ def test_shapes_owned_by_other_services_keep_contract_additions() -> None:
     assert RedevelopResult.model_validate(result).model_dump()["extra_note"] == "listed under Contract additions"
 
 
+def test_failed_rebuild_with_unknown_language_is_accepted() -> None:
+    """redev_engine reports an early failure with source_language "unknown"; its error must still arrive."""
+    failed = load_example("redevelop_result.M001.json") | {
+        "status": "ERROR",
+        "source_language": "unknown",
+        "error": {"code": "INTERNAL_ERROR", "message": "KeyError: 'language'"},
+    }
+    assert RedevelopResult.model_validate(failed).source_language == "unknown"
+
+
 def test_run_request_defaults_to_all_five_stages() -> None:
     """An empty run request asks for every stage without auto approval."""
     request = RunCreateRequest.model_validate({})
