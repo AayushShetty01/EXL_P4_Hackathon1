@@ -1,0 +1,17 @@
+{
+  "model_id": "M001",
+  "folder": "model_estate/M001_cc_pd_scorecard_sas",
+  "language": "SAS",
+  "code_files": ["code/01_prepare.sas", "code/02_train.sas", "code/03_score.sas"],
+  "doc_files": ["docs/model_document_2021.md"],
+  "data": {
+    "dev_path": "data/dev.csv",
+    "oot_path": "data/oot.csv",
+    "dictionary_path": "data/data_dictionary.csv",
+    "id_col": "ID",
+    "target_col": "default_flag",
+    "protected_cols": ["SEX", "AGE_BAND"]
+  },
+  "golden": null,
+  "redevelop": true
+}

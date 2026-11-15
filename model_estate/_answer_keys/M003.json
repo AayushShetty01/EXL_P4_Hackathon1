@@ -1,0 +1,22 @@
+{
+  "model_id": "M003",
+  "expected_inventory": {
+    "model_type": "fraud",
+    "language": "Python",
+    "algorithm": "Gradient boosting classifier",
+    "target_variable": "fraud_flag",
+    "input_variables": ["amount", "hour", "merchant_category", "distance_from_home_km", "txn_count_24h", "card_present"]
+  },
+  "seeded_doc_differences": [
+    {"id": "D001", "topic": "Decision threshold", "legacy_doc_says": "Declined above 0.10", "code_says": "Declined above 0.06",
+     "legacy_evidence": {"file": "model_estate/M003_txn_fraud_gbm_py/docs/model_document_2022.md", "start_line": 39, "end_line": 39},
+     "code_evidence": {"file": "model_estate/M003_txn_fraud_gbm_py/code/score.py", "start_line": 12, "end_line": 12}},
+    {"id": "D002", "topic": "Number of trees", "legacy_doc_says": "200 trees", "code_says": "150 trees",
+     "legacy_evidence": {"file": "model_estate/M003_txn_fraud_gbm_py/docs/model_document_2022.md", "start_line": 35, "end_line": 35},
+     "code_evidence": {"file": "model_estate/M003_txn_fraud_gbm_py/code/train.py", "start_line": 26, "end_line": 26}},
+    {"id": "D003", "topic": "Input features", "legacy_doc_says": "Merchant country is an input", "code_says": "No merchant country feature; an undocumented night flag is added",
+     "legacy_evidence": {"file": "model_estate/M003_txn_fraud_gbm_py/docs/model_document_2022.md", "start_line": 29, "end_line": 29},
+     "code_evidence": {"file": "model_estate/M003_txn_fraud_gbm_py/code/train.py", "start_line": 19, "end_line": 19}}
+  ],
+  "translation_traps": []
+}

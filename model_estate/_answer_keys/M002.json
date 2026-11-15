@@ -1,0 +1,22 @@
+{
+  "model_id": "M002",
+  "expected_inventory": {
+    "model_type": "credit_pd",
+    "language": "R",
+    "algorithm": "Binomial GLM with logit link",
+    "target_variable": "default_flag",
+    "input_variables": ["checking_account_status", "credit_history", "savings_account", "duration_months", "credit_amount", "installment_rate_pct", "housing", "other_installment_plans"]
+  },
+  "seeded_doc_differences": [
+    {"id": "D001", "topic": "Loan purpose", "legacy_doc_says": "Loan purpose is an input", "code_says": "Loan purpose is not in the GLM formula",
+     "legacy_evidence": {"file": "model_estate/M002_loan_pd_glm_r/docs/model_document_2020.md", "start_line": 30, "end_line": 30},
+     "code_evidence": {"file": "model_estate/M002_loan_pd_glm_r/code/train_score.R", "start_line": 18, "end_line": 20}},
+    {"id": "D002", "topic": "Duration treatment", "legacy_doc_says": "Duration is continuous", "code_says": "Duration is banded with cut into four intervals",
+     "legacy_evidence": {"file": "model_estate/M002_loan_pd_glm_r/docs/model_document_2020.md", "start_line": 31, "end_line": 31},
+     "code_evidence": {"file": "model_estate/M002_loan_pd_glm_r/code/train_score.R", "start_line": 9, "end_line": 9}},
+    {"id": "D003", "topic": "Decision cutoff", "legacy_doc_says": "Scores below 450 are declined", "code_says": "Scores below 470 are declined",
+     "legacy_evidence": {"file": "model_estate/M002_loan_pd_glm_r/docs/model_document_2020.md", "start_line": 43, "end_line": 43},
+     "code_evidence": {"file": "model_estate/M002_loan_pd_glm_r/code/train_score.R", "start_line": 25, "end_line": 25}}
+  ],
+  "translation_traps": ["R_FACTOR_REFERENCE", "R_CUT_INTERVALS", "R_PREDICT_TYPE"]
+}

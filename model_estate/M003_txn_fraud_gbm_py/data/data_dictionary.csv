@@ -1,0 +1,10 @@
+column,description,role
+ID,Transaction identifier,id
+amount,Transaction amount in GBP,input
+hour,"Hour of the day the transaction was made, 0 to 23",input
+merchant_category,Merchant category,input
+distance_from_home_km,"Distance between merchant and cardholder home address, km",input
+txn_count_24h,Number of transactions on the card in the previous 24 hours,input
+card_present,"1 when the card was physically present, 0 for card not present",input
+AGE_BAND,"Cardholder age band: 18_29, 30_39, 40_49, 50_plus. Protected attribute, never a model input",protected
+fraud_flag,"1 when the transaction was confirmed as fraud, else 0",target
