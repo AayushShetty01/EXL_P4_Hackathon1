@@ -10,6 +10,7 @@ import { RatingBadge } from '../components/RatingBadge'
 import { StatusBadge } from '../components/StatusBadge'
 import { TierBadge } from '../components/TierBadge'
 import { formatDate } from '../formatting/formatDates'
+import { NOT_DISCOVERED } from '../formatting/statusStyles'
 
 type SortKey = 'model_id' | 'model_name' | 'tier'
 
@@ -25,9 +26,15 @@ export function InventoryPage() {
     return [...(modelsQuery.data ?? [])]
       .filter((model) =>
         [model.model_id, model.model_name, model.model_type, model.language, model.business_line]
-          .some((value) => value.toLowerCase().includes(search)),
+          .some((value) => (value ?? '').toLowerCase().includes(search)),
       )
-      .sort((left, right) => left[sortKey].localeCompare(right[sortKey]) * (ascending ? 1 : -1))
+      .sort((left, right) => {
+        const [first, second] = [left[sortKey], right[sortKey]]
+        if (first === second) return 0
+        if (first == null) return 1 // models without a value sort last in both directions
+        if (second == null) return -1
+        return first.localeCompare(second) * (ascending ? 1 : -1)
+      })
   }, [ascending, filter, modelsQuery.data, sortKey])
 
   if (modelsQuery.isLoading) {
@@ -143,13 +150,13 @@ function InventoryRow({ model }: { model: ModelSummary }) {
         <Link to={`/models/${model.model_id}`} className="font-semibold text-teal-800 hover:underline">{model.model_id}</Link>
       </td>
       <td className="max-w-64 px-4 py-4">
-        <Link to={`/models/${model.model_id}`} className="font-semibold text-slate-900 hover:text-teal-800">{model.model_name}</Link>
+        <Link to={`/models/${model.model_id}`} className="font-semibold text-slate-900 hover:text-teal-800">{model.model_name ?? model.model_id}</Link>
         <span className="mt-1 block text-xs text-slate-500">{model.business_line}</span>
       </td>
-      <td className="px-4 py-4 text-slate-700">{model.model_type.replaceAll('_', ' ')}</td>
+      <td className="px-4 py-4 text-slate-700">{model.model_type?.replaceAll('_', ' ') ?? NOT_DISCOVERED}</td>
       <td className="px-4 py-4 text-slate-700">{model.language}</td>
       <td className="px-4 py-4"><TierBadge tier={model.tier} /></td>
-      <td className="px-4 py-4"><StatusBadge status={model.doc_status} /></td>
+      <td className="px-4 py-4">{model.doc_status ? <StatusBadge status={model.doc_status} /> : <span className="text-sm text-slate-500">{NOT_DISCOVERED}</span>}</td>
       <td className="px-4 py-4 text-slate-600">{formatDate(model.last_validated)}</td>
       <td className="px-4 py-4"><RatingBadge rating={model.overall_rating} /></td>
       <td className="px-4 py-4">

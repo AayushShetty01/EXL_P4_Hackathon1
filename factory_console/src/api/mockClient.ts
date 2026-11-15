@@ -29,6 +29,7 @@ import modelM003Fixture from '../mocks/model-M003.json'
 import modelM004Fixture from '../mocks/model-M004.json'
 import documentationFixture from '../mocks/documentation-M001.json'
 import redevelopmentFixture from '../mocks/redevelopment-M001.json'
+import redevelopmentM002Fixture from '../mocks/redevelopment-M002.json'
 import validationFixture from '../mocks/validation-M001.json'
 import monitoringFixture from '../mocks/monitoring-M001.json'
 import complianceFixture from '../mocks/compliance-M001.json'
@@ -40,6 +41,10 @@ const mockInventory: Record<string, InventoryRecord> = {
   M002: modelM002Fixture as InventoryRecord,
   M003: modelM003Fixture as InventoryRecord,
   M004: modelM004Fixture as InventoryRecord,
+}
+const mockRedevelopment: Record<string, RedevelopResult> = {
+  M001: redevelopmentFixture as RedevelopResult,
+  M002: redevelopmentM002Fixture as RedevelopResult,
 }
 const mockRuns: Record<string, Run> = {}
 const mockAudit = auditFixture as Audit
@@ -244,10 +249,11 @@ export async function mockGetDocumentation(modelId: string): Promise<Documentati
   return modelId === 'M001' ? structuredClone(documentationFixture as Documentation) : null
 }
 
-/** Returns sample redevelopment evidence for the hero model. */
+/** Returns sample redevelopment results: M001 without legacy outputs, M002 stopped with an error. */
 export async function mockGetRedevelopment(modelId: string): Promise<RedevelopResult | null> {
   await mockDelay()
-  return modelId === 'M001' ? structuredClone(redevelopmentFixture as RedevelopResult) : null
+  const result = mockRedevelopment[modelId]
+  return result ? structuredClone(result) : null
 }
 
 /** Returns sample validation metrics and narrative for the hero model. */

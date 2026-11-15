@@ -5,6 +5,7 @@ import { AlertCircle, FileCode2, Play } from 'lucide-react'
 import { apiMode } from '../api/client'
 import type { Evidence, InventoryRecord, Run } from '../api/types'
 import { formatDate } from '../formatting/formatDates'
+import { NOT_DISCOVERED } from '../formatting/statusStyles'
 import { EvidenceDrawer } from '../components/EvidenceDrawer'
 import { EmptyState } from '../components/EmptyState'
 import { GateReviewPanel } from '../components/GateReviewPanel'
@@ -69,8 +70,8 @@ export function PassportTab({
       <section className="grid gap-5 xl:grid-cols-2">
         <div className="space-y-5">
           <RecordSection title="Model purpose">
-            <Field label="Purpose" value={model.purpose} evidence={model.field_evidence.purpose} onEvidence={setEvidence} />
-            <Field label="Algorithm" value={model.algorithm} evidence={model.field_evidence.algorithm} onEvidence={setEvidence} />
+            <Field label="Purpose" value={model.purpose ?? NOT_DISCOVERED} evidence={model.field_evidence.purpose} onEvidence={setEvidence} />
+            <Field label="Algorithm" value={model.algorithm ?? NOT_DISCOVERED} evidence={model.field_evidence.algorithm} onEvidence={setEvidence} />
             <Field label="Target variable" value={model.target_variable ?? 'Not recorded'} evidence={model.field_evidence.target_variable} onEvidence={setEvidence} />
             <Field label="Language" value={model.language} evidence={model.field_evidence.language} onEvidence={setEvidence} />
           </RecordSection>
@@ -92,6 +93,7 @@ export function PassportTab({
 
         <div className="space-y-5">
           <RecordSection title="Risk tier">
+            {model.tiering ? (<>
             <div className="flex items-center gap-3">
               <TierBadge tier={model.tiering.tier} />
               <span className="text-sm text-slate-600">
@@ -101,13 +103,14 @@ export function PassportTab({
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
               {model.tiering.rationale.map((reason) => <li key={reason}>{reason}</li>)}
             </ul>
+            </>) : <p className="text-sm text-slate-500">{NOT_DISCOVERED}</p>}
           </RecordSection>
           <RecordSection title="Business and governance">
-            <Field label="Business line" value={model.business_line} evidence={model.field_evidence.business_line} onEvidence={setEvidence} />
-            <Field label="Model owner" value={model.model_owner} evidence={model.field_evidence.model_owner} onEvidence={setEvidence} />
+            <Field label="Business line" value={model.business_line ?? 'Not recorded'} evidence={model.field_evidence.business_line} onEvidence={setEvidence} />
+            <Field label="Model owner" value={model.model_owner ?? 'Not recorded'} evidence={model.field_evidence.model_owner} onEvidence={setEvidence} />
             <Field label="Exposure" value={model.exposure_gbp_m == null ? 'Not recorded' : `GBP ${model.exposure_gbp_m.toLocaleString()}m`} evidence={model.field_evidence.exposure_gbp_m} onEvidence={setEvidence} />
-            <Field label="Regulatory use" value={model.regulatory_use} evidence={model.field_evidence.regulatory_use} onEvidence={setEvidence} />
-            <Field label="Document status" value={<StatusBadge status={model.doc_status} />} evidence={model.field_evidence.doc_status} onEvidence={setEvidence} />
+            <Field label="Regulatory use" value={model.regulatory_use ?? 'Not recorded'} evidence={model.field_evidence.regulatory_use} onEvidence={setEvidence} />
+            <Field label="Document status" value={model.doc_status ? <StatusBadge status={model.doc_status} /> : NOT_DISCOVERED} evidence={model.field_evidence.doc_status} onEvidence={setEvidence} />
             <Field label="Document last updated" value={formatDate(model.doc_last_updated)} evidence={model.field_evidence.doc_last_updated} onEvidence={setEvidence} />
           </RecordSection>
         </div>

@@ -1,25 +1,16 @@
 {
   "model_id": "M001",
   "run_id": "run_M001_sample",
-  "status": "PARITY_PASSED",
+  "status": "TRANSLATED_NO_GOLDEN",
   "source_language": "SAS",
   "target_language": "Python",
   "iterations": [
     {
       "iteration": 1,
-      "unit_tests_passed": 8,
-      "unit_tests_failed": 2,
-      "parity_passed": false,
-      "max_abs_diff_pd": 0.08,
-      "diagnosis": "Illustrative mismatch: zero-valued payment amounts need explicit missing-value handling.",
-      "fix_applied": "Illustrative fix: handle zero denominators before scoring."
-    },
-    {
-      "iteration": 2,
       "unit_tests_passed": 10,
       "unit_tests_failed": 0,
-      "parity_passed": true,
-      "max_abs_diff_pd": 0.0000003,
+      "parity_passed": false,
+      "max_abs_diff_pd": null,
       "diagnosis": null,
       "fix_applied": null
     }
@@ -32,10 +23,6 @@
     {
       "path": "artifacts/M001/redevelop/test_model.py",
       "kind": "unit_tests"
-    },
-    {
-      "path": "artifacts/M001/redevelop/parity_certificate.md",
-      "kind": "certificate"
     }
   ],
   "line_mapping": [
@@ -55,56 +42,56 @@
     "failed": 0
   },
   "parity": {
-    "passed": true,
-    "records_compared": 30000,
-    "tolerance_pd": 0.000001,
+    "passed": false,
+    "records_compared": 0,
+    "tolerance_pd": 1e-06,
     "tolerance_coef": 0.0001,
     "levels": [
       {
         "level": "L1_coefficients",
-        "status": "PASSED",
-        "max_abs_diff": 0.00002,
-        "mismatched_records": null,
-        "match_rate": null,
-        "psi": null,
-        "detail": "Illustrative coefficient comparison."
-      },
-      {
-        "level": "L2_record_scores",
-        "status": "PASSED",
-        "max_abs_diff": 0.0000003,
-        "mismatched_records": 0,
-        "match_rate": 1,
-        "psi": null,
-        "detail": "Illustrative row-level comparison."
-      },
-      {
-        "level": "L3_decisions",
-        "status": "PASSED",
-        "max_abs_diff": 0,
-        "mismatched_records": 0,
-        "match_rate": 1,
-        "psi": null,
-        "detail": "Illustrative decision comparison."
-      },
-      {
-        "level": "L4_distribution",
-        "status": "PASSED",
+        "status": "NOT_APPLICABLE",
         "max_abs_diff": null,
         "mismatched_records": null,
         "match_rate": null,
-        "psi": 0.01,
-        "detail": "Illustrative score distribution comparison."
+        "psi": null,
+        "detail": "Illustrative: no legacy outputs exist, so nothing was compared."
+      },
+      {
+        "level": "L2_record_scores",
+        "status": "NOT_APPLICABLE",
+        "max_abs_diff": null,
+        "mismatched_records": null,
+        "match_rate": null,
+        "psi": null,
+        "detail": "Illustrative: no legacy outputs exist, so nothing was compared."
+      },
+      {
+        "level": "L3_decisions",
+        "status": "NOT_APPLICABLE",
+        "max_abs_diff": null,
+        "mismatched_records": null,
+        "match_rate": null,
+        "psi": null,
+        "detail": "Illustrative: no legacy outputs exist, so nothing was compared."
+      },
+      {
+        "level": "L4_distribution",
+        "status": "NOT_APPLICABLE",
+        "max_abs_diff": null,
+        "mismatched_records": null,
+        "match_rate": null,
+        "psi": null,
+        "detail": "Illustrative: no legacy outputs exist, so nothing was compared."
       }
     ],
     "hashes": {
       "legacy_code_sha256": "sample-legacy-code-hash",
       "python_code_sha256": "sample-python-code-hash",
       "input_data_sha256": "sample-input-data-hash",
-      "golden_output_sha256": "sample-golden-output-hash"
+      "golden_output_sha256": null
     },
-    "certificate_md_path": "artifacts/M001/redevelop/parity_certificate.md",
-    "certificate_json_path": "artifacts/M001/redevelop/parity_certificate.json",
+    "certificate_md_path": null,
+    "certificate_json_path": null,
     "mismatch_sample_path": null
   },
   "pitfalls_checked": [

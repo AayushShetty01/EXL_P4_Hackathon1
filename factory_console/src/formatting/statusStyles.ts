@@ -9,6 +9,16 @@ import {
   XCircle,
   type LucideIcon,
 } from 'lucide-react'
+import type { ResultError } from '../api/types'
+
+/** Placeholder for inventory fields that are filled by the discover stage. */
+export const NOT_DISCOVERED = 'Not discovered yet'
+
+/** Readable text of a result error, which is a plain message or a code with a message. */
+export function formatResultError(error: ResultError): string {
+  if (!error) return ''
+  return typeof error === 'string' ? error : `${error.message} (${error.code})`
+}
 
 /** Returns the display label, icon, and color classes for a status. */
 export function statusPresentation(status: string): {
