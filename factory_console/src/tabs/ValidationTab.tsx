@@ -18,6 +18,7 @@ import { StatusBadge } from '../components/StatusBadge'
 import { ChartCard } from '../components/ChartCard'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
+import { formatResultError } from '../formatting/statusStyles'
 
 /** Shows the validation scorecard, charts, fairness, and human-readable report. */
 export function ValidationTab({ modelId }: { modelId: string }) {
@@ -42,7 +43,7 @@ export function ValidationTab({ modelId }: { modelId: string }) {
         </div>
         <div className="flex items-center gap-3"><StatusBadge status={result.status} /><RatingBadge rating={result.overall_rating} /></div>
       </section>
-      {result.error && <p className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900" role="alert">{result.error}</p>}
+      {result.error && <p className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900" role="alert">{formatResultError(result.error)}</p>}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <RatingCard label="Overall" rating={result.overall_rating} />

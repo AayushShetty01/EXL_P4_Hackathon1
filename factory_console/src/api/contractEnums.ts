@@ -25,3 +25,6 @@ export interface PipelineStatus {
   validate: StageStatus
   monitor: StageStatus
 }
+
+/** Error field of a service result: absent, a plain message, or a code with a message. */
+export type ResultError = string | { code: string; message: string } | null

@@ -59,7 +59,7 @@ Run time output goes to `artifacts/{model_id}/redevelop/`: `model.py`, `test_mod
 Python 3.11 or newer. From the repository root:
 
 ```
-python -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r redev_engine/requirements.txt
 cd redev_engine

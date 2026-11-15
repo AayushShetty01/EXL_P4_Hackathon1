@@ -28,7 +28,7 @@ export interface InventoryFieldEvidence extends Evidence {
 
 export interface InputVariable {
   name: string
-  description: string
+  description: string | null
   transformation: string | null
 }
 
@@ -41,22 +41,22 @@ export interface Tiering {
 
 export interface InventoryRecord {
   model_id: string
-  model_name: string
-  purpose: string
-  business_line: string
-  model_owner: string
+  model_name: string | null
+  purpose: string | null
+  business_line: string | null
+  model_owner: string | null
   language: ModelLanguage
-  algorithm: string
+  algorithm: string | null
   target_variable: string | null
   input_variables: InputVariable[]
   outputs: string[]
   upstream_dependencies: string[]
   downstream_uses: string[]
   exposure_gbp_m: number | null
-  regulatory_use: string
-  customer_facing: boolean
-  tiering: Tiering
-  doc_status: DocumentStatus
+  regulatory_use: string | null
+  customer_facing: boolean | null
+  tiering: Tiering | null
+  doc_status: DocumentStatus | null
   doc_last_updated: string | null
   last_code_change: string | null
   last_validated: string | null
@@ -72,13 +72,13 @@ export interface InventoryRecord {
 
 export interface ModelSummary {
   model_id: string
-  model_name: string
-  model_type: ModelType
+  model_name: string | null
+  model_type: ModelType | null
   language: ModelLanguage
-  algorithm: string
-  business_line: string
-  tier: Tier
-  doc_status: DocumentStatus
+  algorithm: string | null
+  business_line: string | null
+  tier: Tier | null
+  doc_status: DocumentStatus | null
   last_validated: string | null
   pipeline_status: PipelineStatus
   overall_rating: Rating | null

@@ -17,6 +17,29 @@ def test_coefficients_are_injected_exactly():
     assert "def score(df, coefficients=None):" in code
 
 
+def deployed_value(code):
+    """Literal value of the plain DEPLOYED_COEFFICIENTS assignment in the code."""
+    module = ast.parse(code)
+    assign = next(n for n in module.body if isinstance(n, ast.Assign) and n.targets[0].id == "DEPLOYED_COEFFICIENTS")
+    return ast.literal_eval(assign.value)
+
+
+def test_annotated_empty_dict_is_injected_exactly():
+    """An annotated empty assignment is replaced by the plain injected one."""
+    code = "from typing import Dict\n\nDEPLOYED_COEFFICIENTS: Dict[str, float] = {}\n\nx = 1\n"
+    injected = inject_coefficients(code, {"Intercept": 0.1, "woe": 1 / 3})
+    assert deployed_value(injected) == {"Intercept": 0.1, "woe": 1 / 3}
+    assert "Dict[str, float]" not in injected and "x = 1" in injected
+
+
+def test_annotated_multiline_dict_is_replaced_completely():
+    """An annotated dict over several lines is replaced in full, nothing of the old value is left."""
+    code = 'DEPLOYED_COEFFICIENTS: dict[str, float] = {\n    "old_a": 9.0,\n    "old_b": 8.0,\n}\ny = 2\n'
+    injected = inject_coefficients(code, {"Intercept": -0.5})
+    assert deployed_value(injected) == {"Intercept": -0.5}
+    assert "old_" not in injected and injected.endswith("y = 2\n")
+
+
 def test_injection_needs_the_assignment():
     """A file without DEPLOYED_COEFFICIENTS is rejected."""
     with pytest.raises(ValueError):

@@ -11,7 +11,9 @@ from pydantic import BaseModel, ValidationError
 from app.config import get_settings
 
 MAX_ATTEMPTS = 4
-RETRYABLE_ERRORS = (openai.RateLimitError, openai.InternalServerError, openai.APIConnectionError, openai.APITimeoutError)
+SERVER_ERRORS = (openai.InternalServerError, openai.APIConnectionError, openai.APITimeoutError)
+RATE_LIMIT_WAITS = (10, 30, 60)
+MAX_RATE_LIMIT_WAIT_SECONDS = 90
 
 
 class LLMError(RuntimeError):
@@ -47,11 +49,43 @@ def make_client() -> openai.OpenAI:
     settings = get_settings()
     if not settings.llm_api_key:
         raise LLMError("LLM_API_KEY is not set. Set it in the root .env or use LLM_MODE=replay.")
-    return openai.OpenAI(base_url=settings.llm_base_url or None, api_key=settings.llm_api_key)
+    return openai.OpenAI(base_url=settings.llm_base_url or None, api_key=settings.llm_api_key, max_retries=0)
+
+
+def error_payload(error: Exception) -> dict:
+    """Inner error object of the provider body, which can be a list (Gemini) or an object."""
+    body = getattr(error, "body", None)
+    if isinstance(body, list):
+        body = body[0] if body else {}
+    if isinstance(body, dict) and isinstance(body.get("error"), dict):
+        body = body["error"]
+    return body if isinstance(body, dict) else {}
+
+
+def provider_message(error: Exception) -> str:
+    """Readable message from the provider, falling back to the SDK text."""
+    return str(error_payload(error).get("message") or error)
+
+
+def retry_delay(error: Exception) -> float | None:
+    """Seconds the provider asks us to wait: RetryInfo 'retryDelay' in the body, else a numeric Retry-After header."""
+    for detail in error_payload(error).get("details") or []:
+        delay = str(detail.get("retryDelay", "")) if isinstance(detail, dict) else ""
+        if delay.endswith("s"):
+            try:
+                return float(delay[:-1])
+            except ValueError:
+                pass
+    response = getattr(error, "response", None)
+    header = response.headers.get("retry-after") if response is not None else None
+    try:
+        return float(header) if header else None
+    except ValueError:
+        return None
 
 
 def call_provider(model: str, system: str, user: str, json_mode: bool) -> tuple[str, int, int]:
-    """Call the provider with exponential backoff on rate limit and server errors."""
+    """Call the provider; wait on short rate limits, stop at once on long ones, back off on server errors."""
     client = make_client()
     kwargs = {"response_format": {"type": "json_object"}} if json_mode else {}
     for attempt in range(1, MAX_ATTEMPTS + 1):
@@ -68,9 +102,16 @@ def call_provider(model: str, system: str, user: str, json_mode: bool) -> tuple[
                 usage.prompt_tokens if usage else 0,
                 usage.completion_tokens if usage else 0,
             )
-        except RETRYABLE_ERRORS:
+        except openai.RateLimitError as error:
+            delay = retry_delay(error)
+            if delay is not None and delay > MAX_RATE_LIMIT_WAIT_SECONDS:
+                raise LLMError(f"LLM rate limit, provider asks to retry in {delay:.0f} s: {provider_message(error)}") from error
             if attempt == MAX_ATTEMPTS:
-                raise
+                raise LLMError(f"LLM rate limit after {MAX_ATTEMPTS} attempts: {provider_message(error)}") from error
+            time.sleep(delay if delay is not None else RATE_LIMIT_WAITS[attempt - 1])
+        except SERVER_ERRORS as error:
+            if attempt == MAX_ATTEMPTS:
+                raise LLMError(f"LLM provider failed after {MAX_ATTEMPTS} attempts: {provider_message(error)}") from error
             time.sleep(2**attempt)
     raise LLMError("unreachable")
 

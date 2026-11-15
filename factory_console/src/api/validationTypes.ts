@@ -1,5 +1,5 @@
 /* Defines deterministic validation metrics, findings, and report types. */
-import type { FindingSeverity, Rating } from './contractEnums'
+import type { FindingSeverity, Rating, ResultError } from './contractEnums'
 
 export interface ValidationCheck {
   check: string
@@ -132,7 +132,7 @@ export interface ValidationResult {
   thresholds_used: Record<string, number>
   result_path: string
   duration_seconds: number
-  error: string | null
+  error: ResultError
 }
 
 export interface ValidationView {

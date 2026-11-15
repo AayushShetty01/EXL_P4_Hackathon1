@@ -1,0 +1,24 @@
+{
+  "model_id": "M002",
+  "run_id": "run_M002_sample",
+  "status": "ERROR",
+  "source_language": "R",
+  "target_language": "Python",
+  "iterations": [],
+  "generated_files": [],
+  "line_mapping": [],
+  "unit_tests": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0
+  },
+  "parity": null,
+  "pitfalls_checked": [],
+  "mlflow": null,
+  "llm_trace": [],
+  "duration_seconds": 12.4,
+  "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "ValueError: model.py has no top level DEPLOYED_COEFFICIENTS assignment"
+  }
+}

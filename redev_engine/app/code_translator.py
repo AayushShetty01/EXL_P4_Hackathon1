@@ -68,7 +68,13 @@ def inject_coefficients(code: str, coefficients: dict[str, float]) -> str:
     """Replace the DEPLOYED_COEFFICIENTS assignment with the legacy values, inserted by code (never taken from the LLM)."""
     tree = ast.parse(code)
     for node in tree.body:
-        if isinstance(node, ast.Assign) and any(getattr(t, "id", None) == "DEPLOYED_COEFFICIENTS" for t in node.targets):
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+        elif isinstance(node, ast.AnnAssign):
+            targets = [node.target]  # 'DEPLOYED_COEFFICIENTS: Dict[str, float] = {}'; the annotation is dropped
+        else:
+            continue
+        if any(getattr(t, "id", None) == "DEPLOYED_COEFFICIENTS" for t in targets):
             lines = code.splitlines()
             body = "".join(f"\n    {name!r}: {value!r}," for name, value in coefficients.items())
             replacement = "DEPLOYED_COEFFICIENTS = {" + body + ("\n}" if coefficients else "}")

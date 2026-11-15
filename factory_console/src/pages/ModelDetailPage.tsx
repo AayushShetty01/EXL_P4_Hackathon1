@@ -79,12 +79,12 @@ export function ModelDetailPage() {
         <div>
           <Link to="/models" className="text-sm font-medium text-teal-800 hover:underline">← Model inventory</Link>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h2 className="text-2xl font-semibold text-slate-950">{modelQuery.data.model_name}</h2>
-            <TierBadge tier={modelQuery.data.tiering.tier} />
+            <h2 className="text-2xl font-semibold text-slate-950">{modelQuery.data.model_name ?? modelQuery.data.model_id}</h2>
+            <TierBadge tier={modelQuery.data.tiering?.tier ?? null} />
             <RatingBadge rating={modelSummary.overall_rating} />
           </div>
           <p className="mt-2 text-sm text-slate-600">
-            {modelQuery.data.model_id} · {modelQuery.data.language} · {modelQuery.data.model_owner}
+            {modelQuery.data.model_id} · {modelQuery.data.language} · {modelQuery.data.model_owner ?? 'Owner not recorded'}
           </p>
         </div>
       </div>

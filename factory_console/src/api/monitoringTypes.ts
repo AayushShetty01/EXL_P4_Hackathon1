@@ -1,5 +1,5 @@
 /* Defines monitoring batch results, alerts, and revalidation triggers. */
-import type { Rating } from './contractEnums'
+import type { Rating, ResultError } from './contractEnums'
 
 export interface MonitoringBatch {
   batch: string
@@ -23,5 +23,5 @@ export interface MonitoringResult {
   trigger_reason: string | null
   thresholds_used: { psi_green: number; psi_amber: number; auc_drop_trigger: number }
   result_path: string
-  error: string | null
+  error: ResultError
 }

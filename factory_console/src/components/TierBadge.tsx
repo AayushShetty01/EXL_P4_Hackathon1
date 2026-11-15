@@ -1,8 +1,10 @@
 /* Displays the model's assigned materiality tier. */
 import type { Tier } from '../api/types'
+import { NOT_DISCOVERED } from '../formatting/statusStyles'
 
 /** Shows a model tier using a consistent visual badge. */
-export function TierBadge({ tier }: { tier: Tier }) {
+export function TierBadge({ tier }: { tier: Tier | null }) {
+  if (!tier) return <span className="text-sm text-slate-500">{NOT_DISCOVERED}</span>
   const color =
     tier === 'Tier 1'
       ? 'border-violet-200 bg-violet-50 text-violet-800'

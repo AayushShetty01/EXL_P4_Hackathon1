@@ -66,12 +66,12 @@
     {
       "model_id": "M004",
       "model_name": "Risk-Based Loan Pricing",
-      "model_type": "pricing",
+      "model_type": null,
       "language": "SAS",
-      "algorithm": "Rules and linear regression",
+      "algorithm": null,
       "business_line": "Personal Lending",
-      "tier": "Tier 3",
-      "doc_status": "OUTDATED",
+      "tier": null,
+      "doc_status": null,
       "last_validated": null,
       "pipeline_status": {
         "discover": "PENDING",

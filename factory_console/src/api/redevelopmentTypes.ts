@@ -1,5 +1,5 @@
 /* Defines rebuild outputs, code mappings, and parity certificate types. */
-import type { ModelLanguage } from './contractEnums'
+import type { ModelLanguage, ResultError } from './contractEnums'
 
 export interface RedevelopmentIteration {
   iteration: number
@@ -43,13 +43,13 @@ export interface ParityResult {
   tolerance_coef: number
   levels: ParityLevel[]
   hashes: {
-    legacy_code_sha256: string
-    python_code_sha256: string
-    input_data_sha256: string
-    golden_output_sha256: string
+    legacy_code_sha256: string | null
+    python_code_sha256: string | null
+    input_data_sha256: string | null
+    golden_output_sha256: string | null
   }
-  certificate_md_path: string
-  certificate_json_path: string
+  certificate_md_path: string | null
+  certificate_json_path: string | null
   mismatch_sample_path: string | null
 }
 
@@ -63,10 +63,10 @@ export interface RedevelopResult {
   generated_files: GeneratedFile[]
   line_mapping: LineMapping[]
   unit_tests: { total: number; passed: number; failed: number }
-  parity: ParityResult
+  parity: ParityResult | null
   pitfalls_checked: string[]
   mlflow: Record<string, string> | null
   llm_trace: Array<Record<string, string | number | boolean>>
   duration_seconds: number
-  error: string | null
+  error: ResultError
 }
