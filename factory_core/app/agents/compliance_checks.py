@@ -9,6 +9,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 Verdict = tuple[str, str | None, str | None]
+INVENTORY_RECORD = ("discover", "inventory_record.json")
+MODEL_DOCUMENT = ("document", "model_document.json")
+NOT_VALIDATED = "Not validated yet"
 
 
 @dataclass
@@ -41,7 +44,7 @@ class ModelEvidence:
 
 def inventory_recorded(e: ModelEvidence) -> Verdict:
     """P1: the inventory record exists and its gate is approved."""
-    path = e.path("discover", "inventory_record.json")
+    path = e.path(*INVENTORY_RECORD)
     if e.inventory and "discover" in e.approvals:
         return "MET", path, None
     return (
@@ -52,7 +55,7 @@ def inventory_recorded(e: ModelEvidence) -> Verdict:
 def tier_assigned(e: ModelEvidence) -> Verdict:
     """P1: a tier with rationale."""
     tiering = (e.inventory or {}).get("tiering")
-    return ("MET", e.path("discover", "inventory_record.json"), None) if tiering else ("NOT_MET", None, "No tier yet")
+    return ("MET", e.path(*INVENTORY_RECORD), None) if tiering else ("NOT_MET", None, "No tier yet")
 
 
 def dependencies_recorded(e: ModelEvidence) -> Verdict:
@@ -60,10 +63,10 @@ def dependencies_recorded(e: ModelEvidence) -> Verdict:
     if not e.inventory:
         return "NOT_MET", None, "Not discovered yet"
     if e.inventory.get("upstream_dependencies") or e.inventory.get("downstream_uses"):
-        return "MET", e.path("discover", "inventory_record.json"), None
+        return "MET", e.path(*INVENTORY_RECORD), None
     return (
         "PARTIAL",
-        e.path("discover", "inventory_record.json"),
+        e.path(*INVENTORY_RECORD),
         "No dependencies found in the files; confirm with the owner",
     )
 
@@ -72,7 +75,7 @@ def owner_recorded(e: ModelEvidence) -> Verdict:
     """P2: an accountable owner (a role title only is partial)."""
     if not (e.inventory or {}).get("model_owner"):
         return "NOT_MET", None, "No owner in the register"
-    return "PARTIAL", e.path("discover", "inventory_record.json"), "Owner recorded as a role title only"
+    return "PARTIAL", e.path(*INVENTORY_RECORD), "Owner recorded as a role title only"
 
 
 def gates_audited(e: ModelEvidence) -> Verdict:
@@ -101,7 +104,7 @@ def documented(section_ids: tuple[str, ...]) -> Callable[[ModelEvidence], Verdic
         """MET when every listed section has a verified claim."""
         if not e.documentation:
             return "NOT_MET", None, "Not documented yet"
-        path = e.path("document", "model_document.json")
+        path = e.path(*MODEL_DOCUMENT)
         if all(e.section_has_claims(section_id) for section_id in section_ids):
             return "MET", path, None
         return "PARTIAL", path, "Some sections have no verified claim"
@@ -127,13 +130,13 @@ def documentation_current(e: ModelEvidence) -> Verdict:
     if not e.documentation:
         return "NOT_MET", None, "Not documented yet"
     drift = len(e.documentation.get("doc_drift", []))
-    return "MET", e.path("document", "model_document.json"), f"{drift} differences against the old document listed"
+    return "MET", e.path(*MODEL_DOCUMENT), f"{drift} differences against the old document listed"
 
 
 def independently_validated(e: ModelEvidence) -> Verdict:
     """P4: validation approved by a reviewer who did not approve redevelopment."""
     if not e.validation:
-        return "NOT_MET", None, "Not validated yet"
+        return "NOT_MET", None, NOT_VALIDATED
     report = e.validation["report"].get("html_path")
     validators, developers = set(e.approvals.get("validate", [])), set(e.approvals.get("redevelop", []))
     if validators and not validators & developers:
@@ -144,7 +147,7 @@ def independently_validated(e: ModelEvidence) -> Verdict:
 def soundness_reviewed(e: ModelEvidence) -> Verdict:
     """P4: conceptual soundness reviewed in the validation narrative."""
     text = ((e.validation or {}).get("narrative") or {}).get("conceptual_soundness")
-    return ("MET", e.validation["report"].get("html_path"), None) if text else ("NOT_MET", None, "Not validated yet")
+    return ("MET", e.validation["report"].get("html_path"), None) if text else ("NOT_MET", None, NOT_VALIDATED)
 
 
 def implementation_verified(e: ModelEvidence) -> Verdict:
@@ -177,7 +180,7 @@ def revalidation_defined(e: ModelEvidence) -> Verdict:
 def findings_recorded(e: ModelEvidence) -> Verdict:
     """P5: findings with recommendations (tracking to closure is outside the prototype)."""
     if not e.validation:
-        return "NOT_MET", None, "Not validated yet"
+        return "NOT_MET", None, NOT_VALIDATED
     if e.validation["result"].get("findings"):
         return (
             "PARTIAL",
@@ -190,7 +193,7 @@ def findings_recorded(e: ModelEvidence) -> Verdict:
 def restriction_of_use(e: ModelEvidence) -> Verdict:
     """P5: restriction of use when the overall rating is RED."""
     if not e.validation:
-        return "NOT_MET", None, "Not validated yet"
+        return "NOT_MET", None, NOT_VALIDATED
     rating = e.validation["result"].get("overall_rating")
     if rating == "RED":
         return (

@@ -60,22 +60,21 @@ def rounds_to(value: float, decimals: int, number: float) -> bool:
     return math.isclose(round(value, decimals), number, abs_tol=1e-9)
 
 
+def stands_for(number: float, percent: bool, decimals: int | None, value: float) -> bool:
+    """True when one written number stands for one source value."""
+    if decimals is None:
+        return math.isclose(number, value, rel_tol=1e-6)
+    if percent:
+        return rounds_to(value * 100, decimals, number) or rounds_to(value, decimals, number)
+    if decimals == 0:
+        return math.isclose(value, number, rel_tol=0.0, abs_tol=1e-9)
+    return rounds_to(value, decimals, number) or rounds_to(value * 100, decimals, number)
+
+
 def matches(token: str, value: float) -> bool:
     """True when a written number stands for a source value (the sign may be dropped in words)."""
     number, percent, decimals = parse_number(token)
-    for magnitude in (value, abs(value)):
-        if decimals is None:
-            if math.isclose(number, magnitude, rel_tol=1e-6):
-                return True
-        elif percent:
-            if rounds_to(magnitude * 100, decimals, number) or rounds_to(magnitude, decimals, number):
-                return True
-        elif decimals == 0:
-            if magnitude == number:
-                return True
-        elif rounds_to(magnitude, decimals, number) or rounds_to(magnitude * 100, decimals, number):
-            return True
-    return False
+    return any(stands_for(number, percent, decimals, magnitude) for magnitude in (value, abs(value)))
 
 
 def check_numbers(text: str, values: set[float]) -> tuple[list[str], list[str]]:

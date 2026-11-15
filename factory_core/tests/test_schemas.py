@@ -77,5 +77,6 @@ def test_run_request_defaults_to_all_five_stages() -> None:
 
 def test_gate_decision_must_be_approve_or_reject() -> None:
     """Only approve and reject are valid gate decisions."""
+    request = load_example("gate_decision_request.json") | {"decision": "maybe"}
     with pytest.raises(ValidationError):
-        GateDecisionRequest.model_validate(load_example("gate_decision_request.json") | {"decision": "maybe"})
+        GateDecisionRequest.model_validate(request)

@@ -49,7 +49,9 @@ def add_model_with_run(session: Session) -> ModelRow:
 def test_utc_timestamp_format() -> None:
     """Timestamps are ISO 8601 UTC with a Z suffix."""
     stamp = utc_timestamp()
-    assert len(stamp) == 20 and stamp[10] == "T" and stamp.endswith("Z")
+    assert len(stamp) == 20
+    assert stamp[10] == "T"
+    assert stamp.endswith("Z")
 
 
 def test_latest_stage_output_returns_the_newest(session: Session) -> None:

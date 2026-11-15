@@ -4,6 +4,7 @@ Run from the factory_core folder: python -m scripts.evaluate_discovery
 Prints field accuracy per model and overall, and writes artifacts/evaluation/discovery.json for the deck.
 """
 
+import argparse
 import json
 import sys
 from typing import Any
@@ -47,6 +48,7 @@ def evaluate(settings: Settings) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     """Print the evaluation and save it under artifacts/evaluation/."""
+    argparse.ArgumentParser(description="Compare the stored inventory records with the answer keys.").parse_args(argv)
     settings = load_settings()
     result = evaluate(settings)
     if not result["models"]:

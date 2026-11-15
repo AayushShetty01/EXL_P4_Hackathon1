@@ -36,7 +36,7 @@ def get_run(session: Session, run_id: str) -> Run:
     return run
 
 
-@router.post("/models/{model_id}/runs", response_model=RunCreated)
+@router.post("/models/{model_id}/runs")
 def start_run(model_id: str, request: RunCreateRequest, runner: RunnerDependency) -> RunCreated:
     """Start a pipeline run for one model; it pauses at the gate after each stage."""
     try:
@@ -45,13 +45,13 @@ def start_run(model_id: str, request: RunCreateRequest, runner: RunnerDependency
         raise api_error(error.status_code, error.code, error.message) from error
 
 
-@router.get("/runs/{run_id}", response_model=Run)
+@router.get("/runs/{run_id}")
 def read_run(run_id: str, session: SessionDependency) -> Run:
     """The state of one run with every stage and gate."""
     return get_run(session, run_id)
 
 
-@router.post("/runs/{run_id}/gates/{stage}/decision", response_model=Run)
+@router.post("/runs/{run_id}/gates/{stage}/decision")
 def decide_gate(
     run_id: str, stage: StageName, decision: GateDecisionRequest, session: SessionDependency, runner: RunnerDependency
 ) -> Run:

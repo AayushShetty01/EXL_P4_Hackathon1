@@ -49,7 +49,9 @@ def test_record_before_discovery_has_register_facts_and_null_discovery_fields(es
     assert record["exposure_gbp_m"] == 1850
     assert record["customer_facing"] is True
     assert len(record["source_files"]) == 4
-    assert record["purpose"] is None and record["algorithm"] is None and record["tiering"] is None
+    assert record["purpose"] is None
+    assert record["algorithm"] is None
+    assert record["tiering"] is None
     assert record["pipeline_status"] == ALL_PENDING
 
 

@@ -47,6 +47,7 @@ def test_unknown_llm_mode_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_api_key_never_appears_in_settings_text(monkeypatch: pytest.MonkeyPatch) -> None:
     """Printing or logging the settings does not reveal the LLM key."""
     monkeypatch.setattr(config, "load_dotenv", lambda *args, **kwargs: False)
-    monkeypatch.setenv("LLM_API_KEY", "not-a-real-key-123")
+    placeholder = "x" * 24
+    monkeypatch.setenv("LLM_API_KEY", placeholder)
     monkeypatch.setenv("LLM_MODE", "live")
-    assert "not-a-real-key-123" not in repr(load_settings())
+    assert placeholder not in repr(load_settings())

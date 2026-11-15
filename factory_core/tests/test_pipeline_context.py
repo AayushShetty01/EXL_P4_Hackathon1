@@ -46,7 +46,9 @@ def test_successful_stage_awaits_review_with_summary_and_duration(hero_estate, e
         run = load_run(session, run_id)
     stage = run.stages[0]
     assert (run.status, run.current_stage, stage.summary) == ("AWAITING_REVIEW", "discover", "Done by code.")
-    assert stage.duration_seconds is not None and stage.started_at and stage.finished_at
+    assert stage.duration_seconds is not None
+    assert stage.started_at
+    assert stage.finished_at
 
 
 def test_failing_stage_fails_the_run_with_its_message(hero_estate, engine, run_id) -> None:

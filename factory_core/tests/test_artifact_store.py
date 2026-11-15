@@ -29,5 +29,6 @@ def test_json_artifact_is_written_and_audited(settings: Settings, engine: Engine
 @pytest.mark.parametrize("path", ["model_estate/M001/x.md", "artifacts/../factory_core/app/main.py"])
 def test_writes_outside_artifacts_are_refused(settings: Settings, engine: Engine, path: str) -> None:
     """Run outputs never go into source folders."""
+    recorder = AuditRecorder(engine)
     with pytest.raises(ValueError):
-        write_text_artifact(settings, AuditRecorder(engine), path, "text")
+        write_text_artifact(settings, recorder, path, "text")

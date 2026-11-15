@@ -125,7 +125,8 @@ def test_prompt_holds_code_dictionary_and_record_but_not_the_old_document(
     system, user = provider.prompts[6]
     assert "Section to write: Limitations (limitations)" in user
     assert "random holdout, not a true out of time sample" in user
-    assert "data_dictionary.csv" in user and "L0002: PAY_0,Repayment status" in user
+    assert "data_dictionary.csv" in user
+    assert "L0002: PAY_0,Repayment status" in user
     assert "model_document_2021.md" not in user
     assert "Never compute" in system
 

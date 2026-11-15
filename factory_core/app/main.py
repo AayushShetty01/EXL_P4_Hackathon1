@@ -36,7 +36,7 @@ def register_on_startup(engine: Engine, settings: Settings) -> None:
             found = register_estate(session, settings)
             logger.info("Estate scan registered %d models", len(found))
         except EstateScanError as error:
-            logger.error("Estate scan failed at startup: %s", error.message)
+            logger.exception("Estate scan failed at startup: %s", error.message)
             if session.exec(select(ModelRow)).first() is None:
                 register_sample_model(session, settings)
 
@@ -65,9 +65,11 @@ def create_app(
         app.state.runner = PipelineRunner(context, background=background)
         if recover_runs:
             app.state.runner.recover_interrupted_runs()
-        yield
-        app.state.runner.close()
-        engine.dispose()
+        try:
+            yield
+        finally:
+            app.state.runner.close()
+            engine.dispose()
 
     app = FastAPI(
         title="factory_core",
@@ -86,7 +88,7 @@ def create_app(
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.add_exception_handler(Exception, unexpected_error_handler)
 
-    @app.get("/health", response_model=HealthStatus, tags=["health"])
+    @app.get("/health", tags=["health"])
     def health() -> HealthStatus:
         """Service health in the shared contract shape."""
         return HealthStatus(status="ok", service=SERVICE_NAME, version=SERVICE_VERSION)

@@ -84,8 +84,9 @@ def test_unreachable_service_gives_a_clear_stage_error(settings: Settings) -> No
         """Refuse the connection."""
         raise httpx.ConnectError("Connection refused", request=request)
 
+    clients = live_clients(settings, handler)
     with pytest.raises(ServiceCallError) as raised:
-        live_clients(settings, handler).redevelop(REDEVELOP_REQUEST)
+        clients.redevelop(REDEVELOP_REQUEST)
     assert raised.value.code == "SERVICE_UNREACHABLE"
     assert str(raised.value).startswith("redev_engine: not reachable at http://redev-engine.test")
     assert "USE_STUBS=true" in str(raised.value)
@@ -98,8 +99,9 @@ def test_timeout_is_reported(settings: Settings) -> None:
         """Never answer in time."""
         raise httpx.ReadTimeout("timed out", request=request)
 
+    clients = live_clients(settings, handler)
     with pytest.raises(ServiceCallError) as raised:
-        live_clients(settings, handler).redevelop(REDEVELOP_REQUEST)
+        clients.redevelop(REDEVELOP_REQUEST)
     assert raised.value.code == "SERVICE_TIMEOUT"
 
 
@@ -110,8 +112,9 @@ def test_error_body_from_the_service_is_passed_on(settings: Settings) -> None:
         """Answer with a contract error body."""
         return httpx.Response(422, json={"error": {"code": "NO_GOLDEN", "message": "golden files missing"}})
 
+    clients = live_clients(settings, handler)
     with pytest.raises(ServiceCallError) as raised:
-        live_clients(settings, handler).redevelop(REDEVELOP_REQUEST)
+        clients.redevelop(REDEVELOP_REQUEST)
     assert raised.value.code == "NO_GOLDEN"
     assert "golden files missing" in str(raised.value)
 
@@ -123,8 +126,9 @@ def test_reply_that_breaks_the_contract_is_refused(settings: Settings) -> None:
         """Answer with a reply that misses contract fields."""
         return httpx.Response(200, json={"model_id": "M002"})
 
+    clients = live_clients(settings, handler)
     with pytest.raises(ServiceCallError) as raised:
-        live_clients(settings, handler).redevelop(REDEVELOP_REQUEST)
+        clients.redevelop(REDEVELOP_REQUEST)
     assert raised.value.code == "CONTRACT_MISMATCH"
 
 

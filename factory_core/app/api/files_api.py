@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api", tags=["files"])
 SettingsDependency = Annotated[Settings, Depends(request_settings)]
 
 
-@router.get("/files", response_model=FileView)
+@router.get("/files")
 def read_file(path: str, settings: SettingsDependency) -> FileView:
     """Text content of one file, by its path relative to the repository root."""
     try:

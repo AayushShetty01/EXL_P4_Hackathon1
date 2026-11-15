@@ -26,7 +26,10 @@ COMPLEXITY_DESCRIPTIONS = {
 }
 NO_REGULATORY_USE = {"", "none", "no", "n/a", "na", "not applicable"}
 MANY_INPUTS = 30
-REVALIDATION_MONTHS: dict[str, int] = {"Tier 1": 12, "Tier 2": 24, "Tier 3": 36}
+TIER_1: Tier = "Tier 1"
+TIER_2: Tier = "Tier 2"
+TIER_3: Tier = "Tier 3"
+REVALIDATION_MONTHS: dict[str, int] = {TIER_1: 12, TIER_2: 24, TIER_3: 36}
 
 
 @dataclass(frozen=True)
@@ -102,14 +105,14 @@ def complexity_score(algorithm: str | None, input_count: int) -> tuple[int, list
 def assign_tier(materiality: int, complexity: int) -> tuple[Tier, str]:
     """Tier from the two scores, with the sentence that explains it."""
     if materiality == 3:
-        return "Tier 1", "Tier 1 because materiality is 3."
+        return TIER_1, f"{TIER_1} because materiality is 3."
     if materiality == 2 and complexity >= 2:
-        return "Tier 1", "Tier 1 because materiality is 2 and complexity is 2 or more."
+        return TIER_1, f"{TIER_1} because materiality is 2 and complexity is 2 or more."
     if materiality == 2:
-        return "Tier 2", "Tier 2 because materiality is 2."
+        return TIER_2, f"{TIER_2} because materiality is 2."
     if complexity == 3:
-        return "Tier 2", "Tier 2 because complexity is 3."
-    return "Tier 3", "Tier 3 because materiality and complexity are both low."
+        return TIER_2, f"{TIER_2} because complexity is 3."
+    return TIER_3, f"{TIER_3} because materiality and complexity are both low."
 
 
 def tier_model(

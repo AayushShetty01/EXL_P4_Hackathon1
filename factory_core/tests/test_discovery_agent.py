@@ -106,7 +106,8 @@ def test_prompt_holds_numbered_code_and_never_the_answer_keys(
     [(system, user)] = provider.prompts
     assert "L0002: proc logistic data=work.dev_woe descending;" in user
     assert "Never state owners, dates, exposure amounts" in system
-    assert "secret" not in user and "_answer_keys" not in user
+    assert "secret" not in user
+    assert "_answer_keys" not in user
 
 
 def test_every_step_is_audited(hero_estate: Settings, engine: Engine, hero_model) -> None:
@@ -138,5 +139,6 @@ def test_unknown_model_type_becomes_other(hero_estate: Settings, engine: Engine,
 
 def test_replay_without_a_recording_fails_clearly(hero_estate: Settings, engine: Engine, hero_model) -> None:
     """In replay mode with an empty cache, discovery stops with a message about recording."""
+    replay_client = LLMClient(hero_estate)
     with pytest.raises(LLMReplayMissError, match="LLM_MODE=live"):
-        discover(hero_estate, engine, hero_model, LLMClient(hero_estate))
+        discover(hero_estate, engine, hero_model, replay_client)

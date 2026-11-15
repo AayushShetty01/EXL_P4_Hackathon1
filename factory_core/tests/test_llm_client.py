@@ -77,14 +77,16 @@ def test_replay_mode_serves_recorded_replies_without_a_key(settings: Settings) -
 
 def test_replay_mode_raises_a_clear_error_on_a_missing_reply(settings: Settings) -> None:
     """Replay mode never calls a provider; a missing reply names the step and how to record it."""
+    client = LLMClient(settings)
     with pytest.raises(LLMReplayMissError, match="section:overview.*LLM_MODE=live"):
-        LLMClient(settings).complete("s", "never recorded", step="section:overview")
+        client.complete("s", "never recorded", step="section:overview")
 
 
 def test_live_mode_without_a_key_explains_what_to_set(settings: Settings) -> None:
     """Live mode with no key stops with a message naming LLM_API_KEY."""
+    client = LLMClient(dataclasses.replace(settings, llm_mode="live"))
     with pytest.raises(LLMConfigurationError, match="LLM_API_KEY"):
-        LLMClient(dataclasses.replace(settings, llm_mode="live")).complete("s", "u")
+        client.complete("s", "u")
 
 
 def test_rate_limits_are_retried_with_backoff(settings: Settings) -> None:
@@ -99,8 +101,9 @@ def test_rate_limits_are_retried_with_backoff(settings: Settings) -> None:
 def test_provider_gives_up_after_four_attempts(settings: Settings) -> None:
     """Four failures in a row become an LLMCallError and nothing is cached."""
     provider = FakeProvider(*(rate_limited() for _ in range(4)))
+    client = LLMClient(live(settings), provider=provider, sleep=lambda seconds: None)
     with pytest.raises(LLMCallError, match="4 times"):
-        LLMClient(live(settings), provider=provider, sleep=lambda seconds: None).complete("s", "u")
+        client.complete("s", "u")
     assert not settings.llm_cache_dir.exists()
 
 
@@ -123,8 +126,9 @@ def test_invalid_json_is_retried_once_with_the_error(settings: Settings) -> None
 def test_invalid_json_twice_is_an_error(settings: Settings) -> None:
     """Two invalid replies stop with LLMInvalidReplyError instead of guessing."""
     provider = FakeProvider("no json here", "still none")
+    client = LLMClient(live(settings), provider=provider)
     with pytest.raises(LLMInvalidReplyError):
-        LLMClient(live(settings), provider=provider).complete("s", "u", json_mode=True, schema=Answer)
+        client.complete("s", "u", json_mode=True, schema=Answer)
 
 
 def test_every_answered_call_is_reported(settings: Settings) -> None:

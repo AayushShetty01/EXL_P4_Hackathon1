@@ -45,54 +45,78 @@ def referenced_paths(payload: Any) -> set[str]:
     return found
 
 
-def export(settings: Settings, output: Path) -> dict[str, int]:
-    """Write the whole snapshot and return how many files of each kind were written."""
-    if output.exists():
-        if not output.resolve().is_relative_to(settings.artifacts_dir.resolve()):
-            raise SystemExit(f"Refusing to clear {output}: the snapshot output must be inside {settings.artifacts_dir}")
-        shutil.rmtree(output)
-    counts = {"endpoints": 0, "files": 0, "artifacts": 0, "skipped": 0}
-    references: set[str] = set()
-    with TestClient(create_app(settings, recover_runs=False)) as client:
+def clear_output(settings: Settings, output: Path) -> None:
+    """Remove an earlier snapshot; only a folder inside artifacts/ may ever be cleared."""
+    if not output.exists():
+        return
+    if not output.resolve().is_relative_to(settings.artifacts_dir.resolve()):
+        raise SystemExit(f"Refusing to clear {output}: the snapshot output must be inside {settings.artifacts_dir}")
+    shutil.rmtree(output)
 
-        def save(relative: str, url: str, **params: Any) -> None:
-            """Save one GET response when it succeeds; a failed one stays missing."""
-            response = client.get(url, params=params)
-            if response.status_code == 200:
-                write_json(output, relative, response.json())
-                references.update(referenced_paths(response.json()))
-                counts["endpoints"] += 1
 
-        save("models.json", "/api/models")
-        save("metrics.json", "/api/metrics/factory")
-        save("audit.json", "/api/audit", limit=5000)
-        model_ids = [model["model_id"] for model in client.get("/api/models").json()["models"]]
-        for model_id in model_ids:
-            save(f"models/{model_id}.json", f"/api/models/{model_id}")
+class SnapshotWriter:
+    """Saves API responses and the files they mention into one snapshot folder."""
+
+    def __init__(self, settings: Settings, client: TestClient, output: Path) -> None:
+        """Keep the app client, the output folder and the counters."""
+        self.settings = settings
+        self.client = client
+        self.output = output
+        self.counts = {"endpoints": 0, "files": 0, "artifacts": 0, "skipped": 0}
+        self.references: set[str] = set()
+
+    def save(self, relative: str, url: str, **params: Any) -> None:
+        """Save one GET response when it succeeds; a failed one stays missing."""
+        response = self.client.get(url, params=params)
+        if response.status_code == 200:
+            write_json(self.output, relative, response.json())
+            self.references.update(referenced_paths(response.json()))
+            self.counts["endpoints"] += 1
+
+    def save_endpoints(self) -> None:
+        """Save the factory wide endpoints, every model's endpoints and every run."""
+        self.save("models.json", "/api/models")
+        self.save("metrics.json", "/api/metrics/factory")
+        self.save("audit.json", "/api/audit", limit=5000)
+        for model in self.client.get("/api/models").json()["models"]:
+            model_id = model["model_id"]
+            self.save(f"models/{model_id}.json", f"/api/models/{model_id}")
             for endpoint in RESULT_ENDPOINTS:
-                save(f"models/{model_id}/{endpoint}.json", f"/api/models/{model_id}/{endpoint}")
-        with Session(client.app.state.engine) as session:
+                self.save(f"models/{model_id}/{endpoint}.json", f"/api/models/{model_id}/{endpoint}")
+        with Session(self.client.app.state.engine) as session:
             run_ids = [run.run_id for run in session.exec(select(RunRow))]
         for run_id in run_ids:
-            save(f"runs/{run_id}.json", f"/api/runs/{run_id}")
-        for path in sorted(references):
-            if Path(path).suffix.lower() in BINARY_SUFFIXES:
-                source = settings.repository_root / path
-                if source.is_file():
-                    target = output / "artifacts" / path.removeprefix("artifacts/")
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copyfile(source, target)
-                    counts["artifacts"] += 1
-                else:
-                    counts["skipped"] += 1
-                continue
-            response = client.get("/api/files", params={"path": path})
-            if response.status_code == 200:
-                write_json(output, f"files/{path.replace('/', '__')}.json", response.json())
-                counts["files"] += 1
-            else:
-                counts["skipped"] += 1
-    return counts
+            self.save(f"runs/{run_id}.json", f"/api/runs/{run_id}")
+
+    def save_reference(self, path: str) -> None:
+        """Copy a binary artifact, or save a text file in the file view shape."""
+        if Path(path).suffix.lower() in BINARY_SUFFIXES:
+            source = self.settings.repository_root / path
+            if not source.is_file():
+                self.counts["skipped"] += 1
+                return
+            target = self.output / "artifacts" / path.removeprefix("artifacts/")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
+            self.counts["artifacts"] += 1
+            return
+        response = self.client.get("/api/files", params={"path": path})
+        if response.status_code != 200:
+            self.counts["skipped"] += 1
+            return
+        write_json(self.output, f"files/{path.replace('/', '__')}.json", response.json())
+        self.counts["files"] += 1
+
+
+def export(settings: Settings, output: Path) -> dict[str, int]:
+    """Write the whole snapshot and return how many files of each kind were written."""
+    clear_output(settings, output)
+    with TestClient(create_app(settings, recover_runs=False)) as client:
+        writer = SnapshotWriter(settings, client, output)
+        writer.save_endpoints()
+        for path in sorted(writer.references):
+            writer.save_reference(path)
+    return writer.counts
 
 
 def main(argv: list[str] | None = None) -> int:

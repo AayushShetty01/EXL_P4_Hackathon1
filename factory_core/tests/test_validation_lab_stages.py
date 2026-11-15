@@ -84,7 +84,8 @@ def test_validate_and_monitor_requests_follow_the_contract(hero_estate) -> None:
     assert validate["data"]["dev_path"] == f"{HERO_FOLDER}/data/dev.csv"
     assert validate["scores"]["dev_path"] == "artifacts/M001/redevelop/scored_dev.csv"
     assert validate["model_module_path"] == "artifacts/M001/redevelop/model.py"
-    assert validate["feature_cols"] == ["PAY_0"] and validate["protected_cols"] == ["SEX", "AGE_BAND"]
+    assert validate["feature_cols"] == ["PAY_0"]
+    assert validate["protected_cols"] == ["SEX", "AGE_BAND"]
     report = seen["/report"]
     assert report["parity_summary"]["max_abs_diff_pd"] == 3.1e-9
     assert report["narrative"]["unverified_numbers"] == []

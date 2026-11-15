@@ -30,31 +30,31 @@ def stage_result(session: Session, model_id: str, kind: OutputKind, description:
     return payload
 
 
-@router.get("/documentation", response_model=Documentation)
+@router.get("/documentation")
 def get_documentation(model_id: str, session: SessionDependency) -> Documentation:
     """Generated documentation with cited claims and the drift list (stamp 2)."""
     return Documentation.model_validate(stage_result(session, model_id, "documentation", "documentation"))
 
 
-@router.get("/redevelopment", response_model=RedevelopResult)
+@router.get("/redevelopment")
 def get_redevelopment(model_id: str, session: SessionDependency) -> RedevelopResult:
     """The redev_engine result exactly as returned (stamp 3)."""
     return RedevelopResult.model_validate(stage_result(session, model_id, "redevelopment", "redevelopment result"))
 
 
-@router.get("/validation", response_model=ValidationView)
+@router.get("/validation")
 def get_validation(model_id: str, session: SessionDependency) -> ValidationView:
     """Validation numbers, narrative, number grounding and report paths (stamp 4)."""
     return ValidationView.model_validate(stage_result(session, model_id, "validation_view", "validation result"))
 
 
-@router.get("/monitoring", response_model=MonitoringResult)
+@router.get("/monitoring")
 def get_monitoring(model_id: str, session: SessionDependency) -> MonitoringResult:
     """The validation_lab monitoring result exactly as returned (stamp 5)."""
     return MonitoringResult.model_validate(stage_result(session, model_id, "monitoring", "monitoring result"))
 
 
-@router.get("/compliance", response_model=Compliance)
+@router.get("/compliance")
 def get_compliance(model_id: str, session: SessionDependency) -> Compliance:
     """The SS1/23 compliance matrix of a model, computed now from its stored outputs and the audit trail."""
     return build_compliance(session, get_model_row(session, model_id))

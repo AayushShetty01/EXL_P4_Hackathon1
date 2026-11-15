@@ -120,10 +120,12 @@ def test_auto_approve_runs_to_the_end_with_demo_reviewers(pipeline_client: TestC
     run = pipeline_client.get(f"/api/runs/{run_id}").json()
     assert run["status"] == "COMPLETED"
     reviewers = {stage["stage"]: stage["gate"]["reviewer"] for stage in run["stages"]}
-    assert reviewers["redevelop"] == "demo_developer" and reviewers["validate"] == "demo_validator"
+    assert reviewers["redevelop"] == "demo_developer"
+    assert reviewers["validate"] == "demo_validator"
     events = pipeline_client.get("/api/audit", params={"model_id": "M001", "limit": 1000}).json()["events"]
     decisions = [event for event in events if event["action"] == "gate_decision"]
-    assert len(decisions) == 5 and all(event["detail"]["automatic"] for event in decisions)
+    assert len(decisions) == 5
+    assert all(event["detail"]["automatic"] for event in decisions)
     assert pipeline_client.get("/api/metrics/factory").json()["human_review_minutes_logged"] == 0
 
 

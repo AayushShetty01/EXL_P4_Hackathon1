@@ -161,7 +161,7 @@ def latest_run_id(session: Session, model_id: str) -> str | None:
 
 def pipeline_status(session: Session, model: ModelRow) -> dict[str, str]:
     """Stage statuses of the active (or latest) run of a model; PENDING when there is no run."""
-    status = {stage: "PENDING" for stage in STAGE_NAMES}
+    status = dict.fromkeys(STAGE_NAMES, "PENDING")
     run_id = model.active_run_id or latest_run_id(session, model.model_id)
     if run_id:
         for row in session.exec(select(StageRunRow).where(StageRunRow.run_id == run_id)):

@@ -55,33 +55,43 @@ def redevelopment_approver(session: Session, run: RunRow) -> str | None:
     return None
 
 
+def open_gate(session: Session, run_id: str, stage: str) -> tuple[RunRow, ModelRow | None, StageRunRow]:
+    """The run, its model and the stage row, when that stage is waiting for a decision."""
+    run = session.get(RunRow, run_id)
+    if run is None:
+        raise GateError(404, "RUN_NOT_FOUND", f"Run {run_id} does not exist")
+    owner = session.get(ModelRow, run.model_id)
+    if owner is not None and owner.source == "sample":
+        raise GateError(409, "SAMPLE_MODEL", "The sample model from the contract examples is read only.")
+    stage_row = session.exec(
+        select(StageRunRow).where(StageRunRow.run_id == run_id, StageRunRow.stage == stage)
+    ).first()
+    if stage_row is None or stage_row.status != "AWAITING_REVIEW":
+        status = stage_row.status if stage_row else "missing"
+        raise GateError(409, "GATE_NOT_OPEN", f"The {stage} stage is not waiting for review (status {status}).")
+    return run, owner, stage_row
+
+
+def check_independence(session: Session, run: RunRow, reviewer: str) -> None:
+    """Refuse a validate approval by the reviewer who approved redevelopment."""
+    developer = redevelopment_approver(session, run)
+    if developer and developer.strip().lower() == reviewer.strip().lower():
+        raise GateError(
+            409,
+            "INDEPENDENCE_VIOLATION",
+            f"{reviewer} approved the redevelop gate, so a different reviewer must approve validation.",
+        )
+
+
 def record_decision(
     engine: Engine, run_id: str, stage: str, decision: GateDecisionRequest, *, automatic: bool = False
 ) -> None:
     """Check and store one gate decision, update the stage and run, and audit it."""
     with Session(engine) as session:
-        run = session.get(RunRow, run_id)
-        if run is None:
-            raise GateError(404, "RUN_NOT_FOUND", f"Run {run_id} does not exist")
+        run, owner, stage_row = open_gate(session, run_id, stage)
         model_id = run.model_id
-        owner = session.get(ModelRow, model_id)
-        if owner is not None and owner.source == "sample":
-            raise GateError(409, "SAMPLE_MODEL", "The sample model from the contract examples is read only.")
-        stage_row = session.exec(
-            select(StageRunRow).where(StageRunRow.run_id == run_id, StageRunRow.stage == stage)
-        ).first()
-        if stage_row is None or stage_row.status != "AWAITING_REVIEW":
-            status = stage_row.status if stage_row else "missing"
-            raise GateError(409, "GATE_NOT_OPEN", f"The {stage} stage is not waiting for review (status {status}).")
         if stage == "validate" and decision.decision == "approve":
-            developer = redevelopment_approver(session, run)
-            if developer and developer.strip().lower() == decision.reviewer.strip().lower():
-                raise GateError(
-                    409,
-                    "INDEPENDENCE_VIOLATION",
-                    f"{decision.reviewer} approved the redevelop gate, "
-                    "so a different reviewer must approve validation.",
-                )
+            check_independence(session, run, decision.reviewer)
         now = utc_timestamp()
         stage_row.gate = GateRecord(
             decision=decision.decision,

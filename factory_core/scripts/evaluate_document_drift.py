@@ -6,6 +6,7 @@ most words of its topic. Recall is reported on VERIFIED items, and separately in
 Writes artifacts/evaluation/document_drift.json for the deck.
 """
 
+import argparse
 import json
 import sys
 from typing import Any
@@ -78,6 +79,7 @@ def evaluate(settings: Settings) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     """Print the evaluation and save it under artifacts/evaluation/."""
+    argparse.ArgumentParser(description="Measure how many seeded document discrepancies were found.").parse_args(argv)
     settings = load_settings()
     result = evaluate(settings)
     if not result["models"]:

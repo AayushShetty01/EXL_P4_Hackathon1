@@ -66,7 +66,8 @@ def test_approval_records_the_gate_and_review_time(engine: Engine) -> None:
     record_decision(engine, "run_M001_001", "discover", decision("owner_a"))
     row = stage_of(engine, "run_M001_001", "discover")
     assert row.status == "APPROVED"
-    assert row.gate["reviewer"] == "owner_a" and row.gate["review_seconds"] > 0
+    assert row.gate["reviewer"] == "owner_a"
+    assert row.gate["review_seconds"] > 0
     with Session(engine) as session:
         [event] = list_events(session)
     assert (event.action, event.actor_type, event.actor) == ("gate_decision", "human", "owner_a")
@@ -85,8 +86,9 @@ def test_reject_closes_the_run(engine: Engine) -> None:
 def test_redevelopment_approver_cannot_approve_validation(engine: Engine) -> None:
     """The same reviewer (any case) is refused with INDEPENDENCE_VIOLATION; another reviewer passes."""
     add_run(engine, "run_M001_001", "validate", approved={"redevelop": "developer_a"})
+    same_reviewer = decision(" Developer_A ")
     with pytest.raises(GateError) as raised:
-        record_decision(engine, "run_M001_001", "validate", decision(" Developer_A "))
+        record_decision(engine, "run_M001_001", "validate", same_reviewer)
     assert (raised.value.status_code, raised.value.code) == (409, "INDEPENDENCE_VIOLATION")
     record_decision(engine, "run_M001_001", "validate", decision("validator_b"))
     with Session(engine) as session:
@@ -97,8 +99,9 @@ def test_independence_also_holds_for_a_revalidation_run(engine: Engine) -> None:
     """In a validate-only run, the approver of the earlier redevelopment is still refused."""
     add_run(engine, "run_M001_001", "monitor", approved={"redevelop": "developer_a"})
     add_run(engine, "run_M001_002", "validate")
+    earlier_developer = decision("developer_a")
     with pytest.raises(GateError):
-        record_decision(engine, "run_M001_002", "validate", decision("developer_a"))
+        record_decision(engine, "run_M001_002", "validate", earlier_developer)
 
 
 def test_rejecting_validation_is_always_allowed(engine: Engine) -> None:
@@ -111,8 +114,9 @@ def test_rejecting_validation_is_always_allowed(engine: Engine) -> None:
 def test_decision_on_a_closed_gate_is_refused(engine: Engine) -> None:
     """Only a stage that awaits review can be decided."""
     add_run(engine, "run_M001_001", "discover")
+    closed_gate = decision("owner_a")
     with pytest.raises(GateError) as raised:
-        record_decision(engine, "run_M001_001", "monitor", decision("owner_a"))
+        record_decision(engine, "run_M001_001", "monitor", closed_gate)
     assert raised.value.code == "GATE_NOT_OPEN"
 
 

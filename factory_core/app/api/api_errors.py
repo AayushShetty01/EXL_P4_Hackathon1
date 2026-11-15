@@ -37,5 +37,6 @@ async def validation_error_handler(request: Request, error: RequestValidationErr
 
 async def unexpected_error_handler(request: Request, error: Exception) -> JSONResponse:
     """Answer an unexpected failure with 500 INTERNAL_ERROR instead of a bare traceback."""
-    logger.exception("Unexpected error on %s %s", request.method, request.url.path)
+    route = getattr(request.scope.get("route"), "path", "an unknown route")
+    logger.exception("Unexpected error on %s", route)
     return error_response(500, "INTERNAL_ERROR", f"{type(error).__name__}: {error}")

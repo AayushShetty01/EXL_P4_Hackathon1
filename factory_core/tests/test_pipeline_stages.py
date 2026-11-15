@@ -90,7 +90,8 @@ def test_unreachable_service_fails_the_stage_clearly(hero_estate) -> None:
         run_id = client.post("/api/models/M001/runs", json={"stages": ["discover", "redevelop"]}).json()["run_id"]
         decide(client, run_id, "discover", "model_owner", role="owner")
         error = client.get(f"/api/runs/{run_id}").json()["stages"][2]["error"]
-    assert error.startswith("redev_engine: not reachable") and "USE_STUBS=true" in error
+    assert error.startswith("redev_engine: not reachable")
+    assert "USE_STUBS=true" in error
 
 
 def redev_engine_llm_calls(client: TestClient) -> int:

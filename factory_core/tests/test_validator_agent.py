@@ -63,7 +63,8 @@ def test_validator_sees_results_but_not_chart_data_or_other_agents(settings: Set
     assert "you did not build this model" in system.lower()
     assert '"hosmer_lemeshow_p": 0.0055' in user
     assert "random holdout" in user
-    assert '"roc_oot"' not in user and "llm_trace" not in user
+    assert '"roc_oot"' not in user
+    assert "llm_trace" not in user
 
 
 def test_separate_validator_model_is_used_when_set(settings: Settings, engine: Engine) -> None:

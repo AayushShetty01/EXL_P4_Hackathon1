@@ -78,14 +78,14 @@ def build_model_summary(session: Session, model: ModelRow) -> ModelSummary:
     )
 
 
-@router.get("/models", response_model=ModelList)
+@router.get("/models")
 def list_models(session: SessionDependency) -> ModelList:
     """Every registered model, ordered by model id."""
     models = session.exec(select(ModelRow).order_by(col(ModelRow.model_id))).all()
     return ModelList(models=[build_model_summary(session, model) for model in models])
 
 
-@router.post("/estate/scan", response_model=ScanResult)
+@router.post("/estate/scan")
 def scan_estate(session: SessionDependency, settings: SettingsDependency) -> ScanResult:
     """Register every model folder found in model_estate/ (no LLM)."""
     try:
@@ -94,13 +94,13 @@ def scan_estate(session: SessionDependency, settings: SettingsDependency) -> Sca
         raise api_error(422, error.code, error.message) from error
 
 
-@router.get("/models/{model_id}", response_model=InventoryRecord)
+@router.get("/models/{model_id}")
 def get_model(model_id: str, session: SessionDependency) -> InventoryRecord:
     """The inventory record of one model (stamp 1)."""
     return build_inventory_record(session, get_model_row(session, model_id))
 
 
-@router.get("/metrics/factory", response_model=FactoryMetrics)
+@router.get("/metrics/factory")
 def factory_metrics(session: SessionDependency) -> FactoryMetrics:
     """Factory numbers computed from the database; nothing here is typed in by hand."""
     models = session.exec(select(ModelRow)).all()

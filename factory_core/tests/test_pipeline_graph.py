@@ -16,7 +16,8 @@ def test_nodes_follow_the_five_stages_with_a_gate_after_each(pipeline_client: Te
     for stage in ("discover", "document", "redevelop", "validate", "monitor"):
         assert {stage, f"gate_{stage}"} <= nodes
     assert DONE in nodes
-    assert next_node("discover") == "document" and next_node("monitor") == DONE
+    assert next_node("discover") == "document"
+    assert next_node("monitor") == DONE
 
 
 def test_skipped_stages_need_no_gate(hero_estate) -> None:

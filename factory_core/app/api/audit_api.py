@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api", tags=["audit"])
 SessionDependency = Annotated[Session, Depends(get_session)]
 
 
-@router.get("/audit", response_model=Audit)
+@router.get("/audit")
 def read_audit(
     session: SessionDependency,
     model_id: str | None = None,
