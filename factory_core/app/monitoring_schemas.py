@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from app.schemas import ContractModel, Rating, ServiceModel
 
 
@@ -39,7 +41,7 @@ class MonitorSimulateResponse(ServiceModel):
     simulated: bool
     batches_dir: str
     batches: list[SimulatedBatch]
-    error: str | None = None
+    error: str | dict[str, Any] | None = None
 
 
 class MonitorReference(ContractModel):
@@ -66,8 +68,8 @@ class MonitorRunRequest(ContractModel):
 class MaxCsi(ServiceModel):
     """The least stable feature of a batch."""
 
-    feature: str
-    csi: float
+    feature: str | None = None
+    csi: float | None = None
 
 
 class MonitoringBatch(ServiceModel):
@@ -75,7 +77,7 @@ class MonitoringBatch(ServiceModel):
 
     batch: str
     n: int
-    psi_score: float
+    psi_score: float | None = None
     max_csi: MaxCsi | None = None
     auc: float | None = None
     observed_default_rate: float | None = None
@@ -89,7 +91,7 @@ class MonitoringAlert(ServiceModel):
     batch: str
     level: Rating
     rule: str
-    value: float
+    value: float | None = None
 
 
 class MonitoringResult(ServiceModel):
@@ -105,4 +107,4 @@ class MonitoringResult(ServiceModel):
     trigger_reason: str | None = None
     thresholds_used: dict[str, float] = {}
     result_path: str | None = None
-    error: str | None = None
+    error: str | dict[str, Any] | None = None

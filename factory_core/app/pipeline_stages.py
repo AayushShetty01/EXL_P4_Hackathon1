@@ -10,7 +10,7 @@ from app.agents.documentation_agent import render_markdown, write_documentation
 from app.api_schemas import InventoryRecord
 from app.artifact_store import write_json_artifact, write_text_artifact
 from app.database import latest_stage_output, pipeline_status, save_stage_output, utc_timestamp
-from app.pipeline_context import StageError, StageWork
+from app.pipeline_context import StageError, StageWork, error_text
 from app.redev_engine_schemas import RedevelopRequest, RedevelopResult
 from app.stage_result_schemas import Documentation
 
@@ -116,5 +116,5 @@ def redevelop_stage(work: StageWork) -> str:
     work.session.commit()
     summary = redevelopment_summary(result)
     if result.status in ("PARITY_FAILED", "ERROR"):
-        raise StageError(f"{summary} {result.error or 'Parity was not reached.'}".strip())
+        raise StageError(f"{summary} {error_text(result.error, 'Parity was not reached.')}".strip())
     return summary

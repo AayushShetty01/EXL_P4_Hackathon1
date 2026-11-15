@@ -127,3 +127,64 @@ def test_failed_validation_is_shown_as_a_failed_stage(hero_estate) -> None:
         "FAILED",
         "validation_lab returned status FAILED: target column missing",
     )
+
+
+def test_null_metrics_and_object_errors_from_validation_lab_are_accepted(hero_estate) -> None:
+    """validation_lab may return null for a metric it cannot compute; that is shown, not a contract failure."""
+    result = load_example("validation_result.M001.json")
+    result["sections"]["discrimination"]["oot"]["auc"] = None
+    result["sections"]["fairness"]["by_attribute"][0]["groups"][0]["approval_rate_bad_customers"] = None
+    monitoring = load_example("monitoring_result.M001.json")
+    monitoring["batches"][0]["max_csi"] = {"feature": None, "csi": None}
+    answers = {
+        "/validate": result,
+        "/report": {
+            "model_id": "M001",
+            "html_path": "artifacts/M001/validation/validation_report.html",
+            "docx_path": None,
+            "error": None,
+        },
+        "/monitor/simulate": {
+            "model_id": "M001",
+            "simulated": True,
+            "batches_dir": "artifacts/M001/monitoring/batches",
+            "batches": [],
+            "error": None,
+        },
+        "/monitor/run": monitoring,
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        """Answer like validation_lab with some metrics left null."""
+        return httpx.Response(200, json=answers[request.url.path])
+
+    settings = dataclasses.replace(live_settings(hero_estate), use_stubs=False)
+    app = create_app(
+        settings, llm_provider=pipeline_provider(), service_transport=httpx.MockTransport(handler), background=False
+    )
+    with TestClient(app) as client:
+        run_id = run_through(client, ["discover", "validate", "monitor"])
+        assert client.get(f"/api/runs/{run_id}").json()["status"] == "COMPLETED"
+        view = client.get("/api/models/M001/validation").json()
+    assert view["result"]["sections"]["discrimination"]["oot"]["auc"] is None
+
+
+def test_object_error_from_validation_lab_becomes_a_readable_stage_error(hero_estate) -> None:
+    """An {"code", "message"} error object is shown by its message."""
+    failing = load_example("validation_result.M001.json") | {
+        "error": {"code": "DATA_ERROR", "message": "target column missing"}
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        """Answer /validate with an error object."""
+        return httpx.Response(200, json=failing)
+
+    settings = dataclasses.replace(live_settings(hero_estate), use_stubs=False)
+    app = create_app(
+        settings, llm_provider=pipeline_provider(), service_transport=httpx.MockTransport(handler), background=False
+    )
+    with TestClient(app) as client:
+        run_id = client.post("/api/models/M001/runs", json={"stages": ["discover", "validate"]}).json()["run_id"]
+        decide(client, run_id, "discover", "developer_a")
+        stage = client.get(f"/api/runs/{run_id}").json()["stages"][3]
+    assert stage["error"] == "validation_lab returned status COMPLETED: target column missing"

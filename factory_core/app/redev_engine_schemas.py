@@ -120,4 +120,4 @@ class RedevelopResult(ServiceModel):
     mlflow: dict[str, Any] | None = None
     llm_trace: list[LlmTraceEntry] = []
     duration_seconds: float | None = None
-    error: str | None = None
+    error: str | dict[str, Any] | None = None

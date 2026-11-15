@@ -65,6 +65,13 @@ class StageWork:
 StageFunction = Callable[[StageWork], str]
 
 
+def error_text(error: object, default: str = "no detail given") -> str:
+    """Readable text of a service error field, which may be text or an {"code", "message"} object."""
+    if isinstance(error, dict):
+        return str(error.get("message") or error.get("code") or error)
+    return str(error) if error else default
+
+
 def stage_error_message(error: Exception) -> str:
     """Known failures keep their own clear message; anything unexpected is prefixed with its type."""
     if isinstance(error, (StageError, LLMError, ServiceCallError, FileAccessError, EstateScanError)):

@@ -47,7 +47,7 @@ class DataQualityCheck(ServiceModel):
     """One data quality check."""
 
     check: str
-    value: float
+    value: float | None = None
     threshold: float
     passed: bool
 
@@ -57,15 +57,15 @@ class DataQuality(ServiceModel):
 
     rating: Rating
     checks: list[DataQualityCheck]
-    target_rate: dict[str, float]
+    target_rate: dict[str, float | None]
 
 
 class DiscriminationSample(ServiceModel):
     """Discrimination metrics on one sample."""
 
-    auc: float
-    gini: float
-    ks: float
+    auc: float | None = None
+    gini: float | None = None
+    ks: float | None = None
 
 
 class Discrimination(ServiceModel):
@@ -74,18 +74,18 @@ class Discrimination(ServiceModel):
     rating: Rating
     dev: DiscriminationSample
     oot: DiscriminationSample
-    gini_relative_drop: float
+    gini_relative_drop: float | None = None
 
 
 class CalibrationHoldout(ServiceModel):
     """Calibration metrics on the holdout sample."""
 
-    brier: float
-    mean_predicted_pd: float
-    observed_default_rate: float
-    observed_over_expected: float
-    hosmer_lemeshow_stat: float
-    hosmer_lemeshow_p: float
+    brier: float | None = None
+    mean_predicted_pd: float | None = None
+    observed_default_rate: float | None = None
+    observed_over_expected: float | None = None
+    hosmer_lemeshow_stat: float | None = None
+    hosmer_lemeshow_p: float | None = None
 
 
 class DecileRow(ServiceModel):
@@ -93,8 +93,8 @@ class DecileRow(ServiceModel):
 
     decile: int
     n: int
-    mean_pd: float
-    observed_rate: float
+    mean_pd: float | None = None
+    observed_rate: float | None = None
 
 
 class Calibration(ServiceModel):
@@ -109,7 +109,7 @@ class FeatureCsi(ServiceModel):
     """Characteristic stability of one feature."""
 
     feature: str
-    csi: float
+    csi: float | None = None
     rating: Rating
 
 
@@ -117,7 +117,7 @@ class Stability(ServiceModel):
     """Stability section."""
 
     rating: Rating
-    psi_score: float
+    psi_score: float | None = None
     csi: list[FeatureCsi]
 
 
@@ -125,12 +125,12 @@ class BacktestBand(ServiceModel):
     """One PD band of the back test."""
 
     band: str
-    pd_min: float
-    pd_max: float
+    pd_min: float | None = None
+    pd_max: float | None = None
     n: int
-    mean_pd: float
-    observed_rate: float
-    binomial_p: float
+    mean_pd: float | None = None
+    observed_rate: float | None = None
+    binomial_p: float | None = None
     light: Rating
 
 
@@ -146,11 +146,11 @@ class FairnessGroup(ServiceModel):
 
     group: str
     n: int
-    approval_rate: float
-    approval_rate_good_customers: float
-    approval_rate_bad_customers: float
-    observed_default_rate: float
-    mean_pd: float
+    approval_rate: float | None = None
+    approval_rate_good_customers: float | None = None
+    approval_rate_bad_customers: float | None = None
+    observed_default_rate: float | None = None
+    mean_pd: float | None = None
 
 
 class FairnessAttribute(ServiceModel):
@@ -158,9 +158,9 @@ class FairnessAttribute(ServiceModel):
 
     attribute: str
     groups: list[FairnessGroup]
-    demographic_parity_ratio: float
-    equal_opportunity_diff: float
-    equalized_odds_diff: float
+    demographic_parity_ratio: float | None = None
+    equal_opportunity_diff: float | None = None
+    equalized_odds_diff: float | None = None
     rating: Rating
 
 
@@ -177,8 +177,8 @@ class SensitivityShock(ServiceModel):
 
     feature: str
     shock: str
-    mean_pd_change: float
-    decision_flip_rate: float
+    mean_pd_change: float | None = None
+    decision_flip_rate: float | None = None
 
 
 class Sensitivity(ServiceModel):
@@ -193,9 +193,9 @@ class Benchmark(ServiceModel):
 
     rating: Rating
     challenger: str
-    champion_auc_oot: float
-    challenger_auc_oot: float
-    auc_uplift: float
+    champion_auc_oot: float | None = None
+    challenger_auc_oot: float | None = None
+    auc_uplift: float | None = None
 
 
 class ValidationSections(ServiceModel):
@@ -254,7 +254,7 @@ class ValidationResult(ServiceModel):
     thresholds_used: dict[str, float] = {}
     result_path: str | None = None
     duration_seconds: float | None = None
-    error: str | None = None
+    error: str | dict[str, Any] | None = None
 
 
 class ReportResponse(ServiceModel):
@@ -263,4 +263,4 @@ class ReportResponse(ServiceModel):
     model_id: str
     html_path: str | None = None
     docx_path: str | None = None
-    error: str | None = None
+    error: str | dict[str, Any] | None = None

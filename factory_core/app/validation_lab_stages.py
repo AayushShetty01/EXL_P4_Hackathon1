@@ -13,7 +13,7 @@ from app.api_schemas import InventoryRecord
 from app.database import latest_stage_output, save_stage_output
 from app.estate_scanner import resolve_safe_path
 from app.monitoring_schemas import MonitorReference, MonitorRunRequest, MonitorSimulateRequest
-from app.pipeline_context import StageError, StageWork
+from app.pipeline_context import StageError, StageWork, error_text
 from app.pipeline_stages import approved_inventory_record
 from app.redev_engine_schemas import RedevelopResult
 from app.schemas import EstateManifest, ManifestData
@@ -133,7 +133,7 @@ def validate_stage(work: StageWork) -> str:
         )
     )
     if result.status != "COMPLETED" or result.error:
-        raise StageError(f"validation_lab returned status {result.status}: {result.error or 'no detail given'}")
+        raise StageError(f"validation_lab returned status {result.status}: {error_text(result.error)}")
     documentation = latest_stage_output(work.session, model.model_id, "documentation") or {}
     limitations = next((s["markdown"] for s in documentation.get("sections", []) if s["id"] == "limitations"), None)
     outcome = write_narrative(
@@ -158,7 +158,7 @@ def validate_stage(work: StageWork) -> str:
         )
     )
     if report.error:
-        raise StageError(f"validation_lab could not render the report: {report.error}")
+        raise StageError(f"validation_lab could not render the report: {error_text(report.error)}")
     view = ValidationView(
         model_id=model.model_id,
         result=result,
@@ -202,7 +202,7 @@ def monitor_stage(work: StageWork) -> str:
         )
     )
     if simulated.error:
-        raise StageError(f"validation_lab could not simulate batches: {simulated.error}")
+        raise StageError(f"validation_lab could not simulate batches: {error_text(simulated.error)}")
     result = services.run_monitoring(
         MonitorRunRequest(
             model_id=model.model_id,
@@ -214,7 +214,7 @@ def monitor_stage(work: StageWork) -> str:
         )
     )
     if result.status != "COMPLETED" or result.error:
-        raise StageError(f"validation_lab monitoring returned status {result.status}: {result.error or 'no detail'}")
+        raise StageError(f"validation_lab monitoring returned status {result.status}: {error_text(result.error)}")
     save_stage_output(
         work.session, model.model_id, work.run.run_id, "monitor", "monitoring", result.model_dump(mode="json")
     )
