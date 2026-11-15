@@ -6,7 +6,6 @@ and store the reply. replay: answer from the cache only, so the pipeline runs wi
 
 import hashlib
 import json
-import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -100,8 +99,8 @@ def cache_key(model: str, system: str, user: str) -> str:
 
 
 def extract_json_object(text: str) -> Any:
-    """Parse the JSON object in a reply, tolerating code fences or text around it."""
-    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+    """Parse the JSON object in a reply; code fences or text around it are ignored."""
+    cleaned = text.strip()
     start, end = cleaned.find("{"), cleaned.rfind("}")
     if start == -1 or end <= start:
         raise ValueError("the reply contains no JSON object")

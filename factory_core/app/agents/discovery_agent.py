@@ -155,6 +155,13 @@ def verify_fields(settings: Settings, model: ModelRow, reply: DiscoveryReply) ->
     return checked
 
 
+def contract_model_type(value: str | None) -> str | None:
+    """The model type if it is one of the contract values, other for anything else, None when unknown."""
+    if value in get_args(ModelType):
+        return value
+    return "other" if value else None
+
+
 def run_discovery(
     settings: Settings,
     model: ModelRow,
@@ -209,9 +216,7 @@ def run_discovery(
         {"tier": outcome.tiering.tier, "materiality": outcome.tiering.materiality_score, "doc_status": doc_status},
     )
     now = utc_timestamp()
-    model_type = (
-        reply.model_type if reply.model_type in get_args(ModelType) else ("other" if reply.model_type else None)
-    )
+    model_type = contract_model_type(reply.model_type)
     record = InventoryRecord(
         model_id=model.model_id,
         model_name=register.get("model_name") or reply.model_name,

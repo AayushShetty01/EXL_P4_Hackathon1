@@ -30,7 +30,8 @@ def test_tier_follows_the_policy(exposure, regulatory_use, customer_facing, algo
         last_validated="2023-02-14",
     )
     tiering = outcome.tiering
-    assert (tiering.tier, tiering.materiality_score, tiering.complexity_score) == expected
+    actual = (tiering.tier, tiering.materiality_score, tiering.complexity_score)
+    assert actual == expected
     assert tiering.rationale[-1].startswith(expected[0])
 
 
