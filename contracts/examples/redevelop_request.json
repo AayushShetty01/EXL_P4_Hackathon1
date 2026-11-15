@@ -1,0 +1,7 @@
+{
+  "run_id": "run_M001_001",
+  "model_id": "M001",
+  "estate_path": "model_estate/M001_cc_pd_scorecard_sas",
+  "max_heal_iterations": 3,
+  "use_pitfall_library": true
+}

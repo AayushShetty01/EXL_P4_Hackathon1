@@ -1,0 +1,44 @@
+# Local settings and secrets (the example file is committed)
+.env
+.env.*
+!.env.example
+
+# Run outputs, local databases and tracking data
+artifacts/
+*.db
+*.sqlite
+*.sqlite3
+mlruns/
+mlartifacts/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# R session files
+.Rhistory
+.RData
+.Rproj.user/
+
+# Node and frontend builds
+node_modules/
+dist/
+*.tsbuildinfo
+npm-debug.log*
+
+# Operating system and editor files
+.DS_Store
+.idea/
+.vscode/

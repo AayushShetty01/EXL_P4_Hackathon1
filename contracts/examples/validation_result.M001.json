@@ -1,0 +1,231 @@
+{
+  "model_id": "M001",
+  "run_id": "run_M001_001",
+  "status": "COMPLETED",
+  "overall_rating": "AMBER",
+  "sample_sizes": {
+    "dev": 21000,
+    "oot": 9000
+  },
+  "sections": {
+    "data_quality": {
+      "rating": "GREEN",
+      "checks": [
+        {
+          "check": "missing_rate_max",
+          "value": 0.0,
+          "threshold": 0.05,
+          "passed": true
+        },
+        {
+          "check": "duplicate_ids",
+          "value": 0,
+          "threshold": 0,
+          "passed": true
+        }
+      ],
+      "target_rate": {
+        "dev": 0.2212,
+        "oot": 0.2219
+      }
+    },
+    "discrimination": {
+      "rating": "GREEN",
+      "dev": {
+        "auc": 0.771,
+        "gini": 0.542,
+        "ks": 0.412
+      },
+      "oot": {
+        "auc": 0.764,
+        "gini": 0.528,
+        "ks": 0.401
+      },
+      "gini_relative_drop": 0.026
+    },
+    "calibration": {
+      "rating": "AMBER",
+      "oot": {
+        "brier": 0.141,
+        "mean_predicted_pd": 0.2087,
+        "observed_default_rate": 0.2219,
+        "observed_over_expected": 1.063,
+        "hosmer_lemeshow_stat": 21.7,
+        "hosmer_lemeshow_p": 0.0055
+      },
+      "decile_table": [
+        {
+          "decile": 1,
+          "n": 900,
+          "mean_pd": 0.041,
+          "observed_rate": 0.047
+        }
+      ]
+    },
+    "stability": {
+      "rating": "GREEN",
+      "psi_score": 0.012,
+      "csi": [
+        {
+          "feature": "PAY_0",
+          "csi": 0.004,
+          "rating": "GREEN"
+        }
+      ]
+    },
+    "backtest": {
+      "rating": "GREEN",
+      "bands": [
+        {
+          "band": "A",
+          "pd_min": 0.0,
+          "pd_max": 0.082,
+          "n": 1800,
+          "mean_pd": 0.05,
+          "observed_rate": 0.054,
+          "binomial_p": 0.41,
+          "light": "GREEN"
+        }
+      ]
+    },
+    "fairness": {
+      "rating": "GREEN",
+      "favourable_outcome": "APPROVE",
+      "by_attribute": [
+        {
+          "attribute": "SEX",
+          "groups": [
+            {
+              "group": "1",
+              "n": 3560,
+              "approval_rate": 0.71,
+              "approval_rate_good_customers": 0.8,
+              "approval_rate_bad_customers": 0.39,
+              "observed_default_rate": 0.24,
+              "mean_pd": 0.23
+            },
+            {
+              "group": "2",
+              "n": 5440,
+              "approval_rate": 0.76,
+              "approval_rate_good_customers": 0.83,
+              "approval_rate_bad_customers": 0.43,
+              "observed_default_rate": 0.21,
+              "mean_pd": 0.2
+            }
+          ],
+          "demographic_parity_ratio": 0.934,
+          "equal_opportunity_diff": 0.03,
+          "equalized_odds_diff": 0.04,
+          "rating": "GREEN"
+        }
+      ]
+    },
+    "sensitivity": {
+      "rating": "GREEN",
+      "shocks": [
+        {
+          "feature": "LIMIT_BAL",
+          "shock": "plus 10 percent",
+          "mean_pd_change": -0.0021,
+          "decision_flip_rate": 0.004
+        }
+      ]
+    },
+    "benchmark": {
+      "rating": "GREEN",
+      "challenger": "gradient_boosting",
+      "champion_auc_oot": 0.764,
+      "challenger_auc_oot": 0.779,
+      "auc_uplift": 0.015
+    }
+  },
+  "findings": [
+    {
+      "id": "F001",
+      "section": "calibration",
+      "severity": "MEDIUM",
+      "title": "Hosmer Lemeshow test rejects calibration on the holdout sample",
+      "detail": "The Hosmer Lemeshow p value is below 0.05 although observed over expected is within tolerance.",
+      "evidence": {
+        "metric": "hosmer_lemeshow_p",
+        "value": 0.0055,
+        "threshold": "0.05 or above is green"
+      },
+      "recommendation": "Review calibration by decile and consider recalibrating the intercept on recent data."
+    }
+  ],
+  "charts": [
+    {
+      "id": "roc_oot",
+      "title": "ROC curve, holdout",
+      "path": "artifacts/M001/validation/charts/roc_oot.png"
+    },
+    {
+      "id": "calibration_oot",
+      "title": "Calibration by decile, holdout",
+      "path": "artifacts/M001/validation/charts/calibration_oot.png"
+    },
+    {
+      "id": "score_distribution",
+      "title": "Model output distribution, development against holdout",
+      "path": "artifacts/M001/validation/charts/score_distribution.png"
+    },
+    {
+      "id": "fairness_SEX",
+      "title": "Approval rate by SEX",
+      "path": "artifacts/M001/validation/charts/fairness_SEX.png"
+    }
+  ],
+  "series": {
+    "roc_oot": [
+      {
+        "fpr": 0.0,
+        "tpr": 0.0
+      },
+      {
+        "fpr": 0.1,
+        "tpr": 0.42
+      },
+      {
+        "fpr": 1.0,
+        "tpr": 1.0
+      }
+    ],
+    "calibration_oot": [
+      {
+        "decile": 1,
+        "mean_pd": 0.041,
+        "observed_rate": 0.047
+      }
+    ],
+    "score_distribution": [
+      {
+        "bin": "D01",
+        "dev_share": 0.1,
+        "oot_share": 0.097
+      }
+    ]
+  },
+  "thresholds_used": {
+    "auc_green": 0.7,
+    "auc_amber": 0.6,
+    "ks_green": 0.3,
+    "ks_amber": 0.2,
+    "gini_drop_green": 0.1,
+    "gini_drop_amber": 0.2,
+    "oe_band_green": 0.1,
+    "oe_band_amber": 0.2,
+    "hl_p_green": 0.05,
+    "psi_green": 0.1,
+    "psi_amber": 0.25,
+    "dp_ratio_green": 0.8,
+    "dp_ratio_amber": 0.7,
+    "eo_diff_green": 0.05,
+    "eo_diff_amber": 0.1,
+    "benchmark_uplift_amber": 0.03
+  },
+  "result_path": "artifacts/M001/validation/result.json",
+  "duration_seconds": 14.2,
+  "error": null
+}
