@@ -1,0 +1,23 @@
+{
+  "model_id": "M002",
+  "folder": "model_estate/M002_loan_pd_glm_r",
+  "language": "R",
+  "code_files": ["code/train_score.R"],
+  "doc_files": ["docs/model_document_2020.md"],
+  "data": {
+    "dev_path": "data/dev.csv",
+    "oot_path": "data/oot.csv",
+    "dictionary_path": "data/data_dictionary.csv",
+    "id_col": "ID",
+    "target_col": "default_flag",
+    "protected_cols": ["personal_status_sex", "AGE_BAND"]
+  },
+  "golden": {
+    "scored_dev_path": "golden/scored_dev_legacy.csv",
+    "scored_oot_path": "golden/scored_oot_legacy.csv",
+    "coefficients_path": "golden/coefficients_legacy.csv",
+    "produced_by": "R 4.6.2 (Rscript model_estate/_tools/make_golden_m002.R)",
+    "produced_on": "2026-11-15"
+  },
+  "redevelop": true
+}

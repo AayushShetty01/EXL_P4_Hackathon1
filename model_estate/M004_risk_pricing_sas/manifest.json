@@ -1,0 +1,10 @@
+{
+  "model_id": "M004",
+  "folder": "model_estate/M004_risk_pricing_sas",
+  "language": "SAS",
+  "code_files": ["code/pricing_model.sas"],
+  "doc_files": ["docs/model_document_2019.md"],
+  "data": null,
+  "golden": null,
+  "redevelop": false
+}

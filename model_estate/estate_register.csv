@@ -1,0 +1,5 @@
+model_id,model_name,business_line,model_owner,exposure_gbp_m,customer_facing,regulatory_use,last_code_change,doc_last_updated,last_validated,status
+M001,Credit Card PD Scorecard,Cards,Head of Cards Credit Risk,1850,Y,IRB,2023-06-20,2021-03-01,2023-02-14,In production
+M002,Personal Loan PD Model,Personal Loans,Head of Personal Loans Credit Risk,420,Y,none,2021-11-08,2020-09-15,2022-01-10,In production
+M003,Card Transaction Fraud Detector,Fraud Operations,Head of Fraud Operations,95,Y,none,2023-09-04,2022-05-10,2022-07-01,In production
+M004,Personal Loan Risk Based Pricing,Pricing,Head of Lending Pricing,60,N,none,2022-04-12,2019-11-04,2020-03-30,In production

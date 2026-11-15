@@ -1,0 +1,86 @@
+M002 golden run on 2026-11-15T12:33:37Z 
+R version 4.6.2 (2026-10-29) 
+
+> dev <- read.csv("data/dev.csv", stringsAsFactors = TRUE)
+
+> oot <- read.csv("data/oot.csv", stringsAsFactors = TRUE)
+
+> prep <- function(d) {
++     d$dur_band <- cut(d$duration_months, breaks = c(0, 12, 24, 
++         36, 72))
++     d$log_amount <- log(d$credit_amount)
++     d$housing <- factor(d$housing, levels = c("A152", "A151", 
++         "A153"))
++     d
++ }
+
+> dev <- prep(dev)
+
+> oot <- prep(oot)
+
+> fit <- glm(default_flag ~ checking_account_status + 
++     credit_history + savings_account + dur_band + log_amount + 
++     installment_rate_pct + housing + other_installment_plans, 
++     family = binomial, data = dev)
+
+> score_set <- function(d) {
++     p <- predict(fit, newdata = d, type = "response")
++     pts <- round(450 + 40 * log((1 - p)/p))
++     dec <- ifelse(pts < 470, "DECLINE", "APPROVE")
++     data.frame(ID = d$ID, pd = sprintf("%.17g", p), score = pts, 
++         decision = dec)
++ }
+
+> dir.create("golden", showWarnings = FALSE)
+
+> write.csv(score_set(dev), "golden/scored_dev_legacy.csv", 
++     row.names = FALSE, quote = FALSE)
+
+> write.csv(score_set(oot), "golden/scored_oot_legacy.csv", 
++     row.names = FALSE, quote = FALSE)
+
+> cf <- coef(fit)
+
+> write.csv(data.frame(variable = names(cf), estimate = sprintf("%.17g", 
++     cf)), "golden/coefficients_legacy.csv", row.names = FALSE, 
++     quote = 1)
+
+Call:
+glm(formula = default_flag ~ checking_account_status + credit_history + 
+    savings_account + dur_band + log_amount + installment_rate_pct + 
+    housing + other_installment_plans, family = binomial, data = dev)
+
+Coefficients:
+                            Estimate Std. Error z value Pr(>|z|)    
+(Intercept)                 -0.34694    1.51006  -0.230 0.818284    
+checking_account_statusA12  -0.30300    0.23479  -1.291 0.196861    
+checking_account_statusA13  -0.68397    0.39628  -1.726 0.084352 .  
+checking_account_statusA14  -1.62753    0.26113  -6.233 4.59e-10 ***
+credit_historyA31           -0.25969    0.57163  -0.454 0.649613    
+credit_historyA32           -0.68529    0.44860  -1.528 0.126611    
+credit_historyA33           -0.66751    0.51685  -1.292 0.196527    
+credit_historyA34           -1.37678    0.47528  -2.897 0.003770 ** 
+savings_accountA62          -0.30825    0.29783  -1.035 0.300679    
+savings_accountA63          -0.73305    0.47233  -1.552 0.120666    
+savings_accountA64          -1.22620    0.54810  -2.237 0.025273 *  
+savings_accountA65          -1.09453    0.30574  -3.580 0.000344 ***
+dur_band(12,24]              0.59142    0.24678   2.397 0.016549 *  
+dur_band(24,36]              0.98252    0.35408   2.775 0.005523 ** 
+dur_band(36,72]              0.99630    0.43880   2.271 0.023176 *  
+log_amount                   0.05754    0.17760   0.324 0.745949    
+installment_rate_pct         0.25039    0.09689   2.584 0.009761 ** 
+housingA151                  0.70502    0.24665   2.858 0.004258 ** 
+housingA153                  0.28546    0.30298   0.942 0.346103    
+other_installment_plansA142 -0.44935    0.45074  -0.997 0.318812    
+other_installment_plansA143 -0.78440    0.26267  -2.986 0.002824 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 855.21  on 699  degrees of freedom
+Residual deviance: 687.15  on 679  degrees of freedom
+AIC: 729.15
+
+Number of Fisher Scoring iterations: 5
+

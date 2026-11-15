@@ -1,0 +1,26 @@
+{
+  "model_id": "M001",
+  "expected_inventory": {
+    "model_type": "credit_pd",
+    "language": "SAS",
+    "algorithm": "Logistic regression scorecard on WoE variables",
+    "target_variable": "default_flag",
+    "input_variables": ["woe_util", "woe_payr", "woe_worst", "woe_arrears", "woe_trend", "woe_pay0", "woe_limit", "woe_payavg"],
+    "raw_input_columns": ["LIMIT_BAL", "PAY_0", "PAY_2", "PAY_3", "PAY_4", "PAY_5", "PAY_6", "BILL_AMT1", "BILL_AMT2", "BILL_AMT6", "PAY_AMT1", "PAY_AMT2", "PAY_AMT3", "PAY_AMT4", "PAY_AMT5", "PAY_AMT6"]
+  },
+  "seeded_doc_differences": [
+    {"id": "D001", "topic": "Number of input variables", "legacy_doc_says": "Ten input variables", "code_says": "Eight WoE variables in the PROC LOGISTIC model statement",
+     "legacy_evidence": {"file": "model_estate/M001_cc_pd_scorecard_sas/docs/model_document_2021.md", "start_line": 31, "end_line": 31},
+     "code_evidence": {"file": "model_estate/M001_cc_pd_scorecard_sas/code/02_train.sas", "start_line": 12, "end_line": 13}},
+    {"id": "D002", "topic": "Decision cutoff", "legacy_doc_says": "Scores below 500 are declined", "code_says": "Scores below 515 are declined",
+     "legacy_evidence": {"file": "model_estate/M001_cc_pd_scorecard_sas/docs/model_document_2021.md", "start_line": 69, "end_line": 69},
+     "code_evidence": {"file": "model_estate/M001_cc_pd_scorecard_sas/code/03_score.sas", "start_line": 39, "end_line": 39}},
+    {"id": "D003", "topic": "Missing utilisation", "legacy_doc_says": "Missing utilisation is replaced by the median", "code_says": "Missing utilisation is assigned to the first WoE bin",
+     "legacy_evidence": {"file": "model_estate/M001_cc_pd_scorecard_sas/docs/model_document_2021.md", "start_line": 48, "end_line": 48},
+     "code_evidence": {"file": "model_estate/M001_cc_pd_scorecard_sas/code/01_prepare.sas", "start_line": 30, "end_line": 30}},
+    {"id": "D004", "topic": "Development sample size", "legacy_doc_says": "24,000 development accounts", "code_says": "dev.csv has 21,000 rows",
+     "legacy_evidence": {"file": "model_estate/M001_cc_pd_scorecard_sas/docs/model_document_2021.md", "start_line": 21, "end_line": 21},
+     "code_evidence": {"file": "model_estate/M001_cc_pd_scorecard_sas/data/dev.csv", "start_line": 1, "end_line": 21001}}
+  ],
+  "translation_traps": ["SAS_DIVIDE_BY_ZERO", "SAS_MISSING_COMPARE", "ROUND_HALF_AWAY", "LOGISTIC_EVENT_LEVEL", "SAS_MISSING_ARITHMETIC", "SAS_IF_ELSE_ORDER"]
+}

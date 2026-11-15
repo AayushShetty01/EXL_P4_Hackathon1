@@ -1,0 +1,22 @@
+{
+  "model_id": "M004",
+  "expected_inventory": {
+    "model_type": "pricing",
+    "language": "SAS",
+    "algorithm": "Rule based pricing tiers plus linear regression margin model",
+    "target_variable": "realised_margin",
+    "input_variables": ["pd_at_origination", "loan_amount", "term_months", "ltv_ratio", "channel_digital"]
+  },
+  "seeded_doc_differences": [
+    {"id": "D001", "topic": "Tier D upper bound", "legacy_doc_says": "Tier D covers 10 to 25 percent", "code_says": "Tier D ends at 20 percent",
+     "legacy_evidence": {"file": "model_estate/M004_risk_pricing_sas/docs/model_document_2019.md", "start_line": 31, "end_line": 31},
+     "code_evidence": {"file": "model_estate/M004_risk_pricing_sas/code/pricing_model.sas", "start_line": 32, "end_line": 32}},
+    {"id": "D002", "topic": "Base rate", "legacy_doc_says": "Base rate 3.75 percent", "code_says": "Base rate 4.25 percent",
+     "legacy_evidence": {"file": "model_estate/M004_risk_pricing_sas/docs/model_document_2019.md", "start_line": 45, "end_line": 45},
+     "code_evidence": {"file": "model_estate/M004_risk_pricing_sas/code/pricing_model.sas", "start_line": 46, "end_line": 46}},
+    {"id": "D003", "topic": "Margin regression predictors", "legacy_doc_says": "Four predictors", "code_says": "Five predictors including channel_digital",
+     "legacy_evidence": {"file": "model_estate/M004_risk_pricing_sas/docs/model_document_2019.md", "start_line": 37, "end_line": 41},
+     "code_evidence": {"file": "model_estate/M004_risk_pricing_sas/code/pricing_model.sas", "start_line": 17, "end_line": 18}}
+  ],
+  "translation_traps": []
+}

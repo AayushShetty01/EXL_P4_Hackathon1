@@ -1,0 +1,27 @@
+column,description,role
+ID,"Customer record identifier, source row order",id
+LIMIT_BAL,"Amount of given credit in NT dollars, individual plus family",input
+SEX,"Gender code (1 male, 2 female). Protected attribute, never a model input",protected
+EDUCATION,"Education code (1 graduate school, 2 university, 3 high school, 4 others, 0/5/6 unknown)",unused
+MARRIAGE,"Marital status code (1 married, 2 single, 3 others, 0 unknown)",unused
+AGE,Age in years,unused
+PAY_0,"Repayment status in September 2005 (-1 pay duly, 1 to 9 months of payment delay; -2 and 0 also occur in the data)",input
+PAY_2,"Repayment status in August 2005 (-1 pay duly, 1 to 9 months of payment delay; -2 and 0 also occur in the data)",input
+PAY_3,"Repayment status in July 2005 (-1 pay duly, 1 to 9 months of payment delay; -2 and 0 also occur in the data)",input
+PAY_4,"Repayment status in June 2005 (-1 pay duly, 1 to 9 months of payment delay; -2 and 0 also occur in the data)",input
+PAY_5,"Repayment status in May 2005 (-1 pay duly, 1 to 9 months of payment delay; -2 and 0 also occur in the data)",input
+PAY_6,"Repayment status in April 2005 (-1 pay duly, 1 to 9 months of payment delay; -2 and 0 also occur in the data)",input
+BILL_AMT1,"Bill statement amount in September 2005, NT dollars",input
+BILL_AMT2,"Bill statement amount in August 2005, NT dollars",input
+BILL_AMT3,"Bill statement amount in July 2005, NT dollars",unused
+BILL_AMT4,"Bill statement amount in June 2005, NT dollars",unused
+BILL_AMT5,"Bill statement amount in May 2005, NT dollars",unused
+BILL_AMT6,"Bill statement amount in April 2005, NT dollars",input
+PAY_AMT1,"Amount paid in September 2005, NT dollars",input
+PAY_AMT2,"Amount paid in August 2005, NT dollars",input
+PAY_AMT3,"Amount paid in July 2005, NT dollars",input
+PAY_AMT4,"Amount paid in June 2005, NT dollars",input
+PAY_AMT5,"Amount paid in May 2005, NT dollars",input
+PAY_AMT6,"Amount paid in April 2005, NT dollars",input
+default_flag,"1 when the customer defaulted on the payment next month, else 0",target
+AGE_BAND,"Age band derived from AGE: 18_29, 30_39, 40_49, 50_plus. Protected attribute",protected

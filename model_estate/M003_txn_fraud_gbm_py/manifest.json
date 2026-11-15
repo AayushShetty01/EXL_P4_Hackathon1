@@ -1,0 +1,23 @@
+{
+  "model_id": "M003",
+  "folder": "model_estate/M003_txn_fraud_gbm_py",
+  "language": "Python",
+  "code_files": ["code/train.py", "code/score.py"],
+  "doc_files": ["docs/model_document_2022.md"],
+  "data": {
+    "dev_path": "data/dev.csv",
+    "oot_path": "data/oot.csv",
+    "dictionary_path": "data/data_dictionary.csv",
+    "id_col": "ID",
+    "target_col": "fraud_flag",
+    "protected_cols": ["AGE_BAND"]
+  },
+  "golden": {
+    "scored_dev_path": "golden/scored_dev_legacy.csv",
+    "scored_oot_path": "golden/scored_oot_legacy.csv",
+    "coefficients_path": null,
+    "produced_by": "Python 3.12, scikit-learn 1.5.2 (python code/score.py)",
+    "produced_on": "2026-11-15"
+  },
+  "redevelop": false
+}
