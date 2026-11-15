@@ -19,6 +19,7 @@ from app.llm_client import (
     ProviderReply,
     extract_json_object,
 )
+from app.provider_errors import retry_delay
 
 
 class Answer(BaseModel):
@@ -89,22 +90,74 @@ def test_live_mode_without_a_key_explains_what_to_set(settings: Settings) -> Non
         client.complete("s", "u")
 
 
-def test_rate_limits_are_retried_with_backoff(settings: Settings) -> None:
-    """Two rate limit errors are retried after waiting 1 then 2 seconds."""
+def server_error() -> openai.InternalServerError:
+    """A 500 error as the SDK raises it."""
+    response = httpx.Response(500, request=httpx.Request("POST", "http://provider.test/chat/completions"))
+    return openai.InternalServerError("server error", response=response, body=None)
+
+
+def gemini_quota_error(delay: str) -> openai.RateLimitError:
+    """A 429 shaped like Gemini's: the body is a list holding the message and a RetryInfo delay."""
+    message = (
+        "You exceeded your current quota. \n* Quota exceeded for metric: free_tier_requests, limit: 20, "
+        "description: Generate content requests per day limit exceeded on Free Tier.\nPlease retry in 15h34m."
+    )
+    retry_info = {"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": delay}
+    body = [{"error": {"code": 429, "message": message, "status": "RESOURCE_EXHAUSTED", "details": [retry_info]}}]
+    response = httpx.Response(429, request=httpx.Request("POST", "http://provider.test/chat/completions"))
+    return openai.RateLimitError("Error code: 429", response=response, body=body)
+
+
+def test_rate_limits_without_a_delay_are_retried_after_10_then_30_seconds(settings: Settings) -> None:
+    """A per minute limit needs longer waits than a server error; the provider gave no delay here."""
     waits: list[float] = []
     provider = FakeProvider(rate_limited(), rate_limited(), "finally")
     response = LLMClient(live(settings), provider=provider, sleep=waits.append).complete("s", "u")
     assert response.text == "finally"
-    assert waits == [1, 2]
+    assert waits == [10.0, 30.0]
+
+
+def test_server_errors_are_retried_after_1_then_2_seconds(settings: Settings) -> None:
+    """A passing server failure is retried quickly."""
+    waits: list[float] = []
+    provider = FakeProvider(server_error(), server_error(), "finally")
+    response = LLMClient(live(settings), provider=provider, sleep=waits.append).complete("s", "u")
+    assert (response.text, waits) == ("finally", [1, 2])
 
 
 def test_provider_gives_up_after_four_attempts(settings: Settings) -> None:
-    """Four failures in a row become an LLMCallError and nothing is cached."""
+    """Four rate limit errors in a row become an LLMCallError with the reason, and nothing is cached."""
     provider = FakeProvider(*(rate_limited() for _ in range(4)))
     client = LLMClient(live(settings), provider=provider, sleep=lambda seconds: None)
-    with pytest.raises(LLMCallError, match="4 times"):
+    with pytest.raises(LLMCallError, match="after 4 attempts.*rate limited"):
         client.complete("s", "u")
     assert not settings.llm_cache_dir.exists()
+
+
+def test_daily_quota_stops_at_once_with_the_provider_reason(settings: Settings) -> None:
+    """A delay of hours means the daily quota is used up: no waiting, and the error says why."""
+    waits: list[float] = []
+    provider = FakeProvider(gemini_quota_error("56075s"))
+    client = LLMClient(live(settings), provider=provider, sleep=waits.append)
+    with pytest.raises(LLMCallError, match="quota used up.*limit: 20.*per day limit exceeded.*15h34m"):
+        client.complete("s", "u", step="section:overview")
+    assert (len(provider.calls), waits) == (1, [])
+
+
+def test_a_short_provider_delay_is_waited_out(settings: Settings) -> None:
+    """A per minute limit with a suggested delay waits that long, then succeeds."""
+    waits: list[float] = []
+    provider = FakeProvider(gemini_quota_error("20s"), "after the wait")
+    response = LLMClient(live(settings), provider=provider, sleep=waits.append).complete("s", "u")
+    assert (response.text, waits) == ("after the wait", [20.0])
+
+
+def test_a_retry_after_header_is_used_when_the_body_has_no_delay() -> None:
+    """The standard Retry-After header gives the delay; a date or nothing gives none."""
+    request = httpx.Request("POST", "http://provider.test/chat/completions")
+    with_header = httpx.Response(429, request=request, headers={"retry-after": "7"})
+    assert retry_delay(openai.RateLimitError("x", response=with_header, body=None)) == 7.0
+    assert retry_delay(rate_limited()) is None
 
 
 def test_json_mode_validates_against_the_schema(settings: Settings) -> None:

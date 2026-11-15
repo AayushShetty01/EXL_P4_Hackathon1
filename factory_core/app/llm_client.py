@@ -16,11 +16,14 @@ import openai
 from pydantic import BaseModel, ValidationError
 
 from app.config import Settings
+from app.provider_errors import provider_message, retry_delay
 
 MAX_PROVIDER_ATTEMPTS = 4
 PROVIDER_TIMEOUT_SECONDS = 180.0
 JSON_ONLY_INSTRUCTION = "Reply with one JSON object only. No text before or after it, no code fences."
-RETRYABLE_ERRORS = (openai.RateLimitError, openai.InternalServerError, openai.APIConnectionError)
+SERVER_ERRORS = (openai.InternalServerError, openai.APIConnectionError)
+RATE_LIMIT_WAITS = (10.0, 30.0, 60.0)
+MAX_RATE_LIMIT_WAIT_SECONDS = 90.0
 
 
 class LLMError(Exception):
@@ -105,6 +108,16 @@ def extract_json_object(text: str) -> Any:
     if start == -1 or end <= start:
         raise ValueError("the reply contains no JSON object")
     return json.loads(cleaned[start : end + 1])
+
+
+def rate_limit_wait(error: openai.RateLimitError, attempt: int, step: str) -> float:
+    """Seconds to wait before retrying a rate limited call; stops at once when waiting cannot help."""
+    delay, reason = retry_delay(error), provider_message(error)
+    if delay is not None and delay > MAX_RATE_LIMIT_WAIT_SECONDS:
+        raise LLMCallError(f"LLM step {step}: provider quota used up (429), a retry now cannot help: {reason}")
+    if attempt == MAX_PROVIDER_ATTEMPTS:
+        raise LLMCallError(f"LLM step {step}: provider still rate limited after {attempt} attempts (429): {reason}")
+    return delay if delay is not None else RATE_LIMIT_WAITS[attempt - 1]
 
 
 def openai_provider(settings: Settings) -> Provider:
@@ -237,13 +250,15 @@ class LLMClient:
             try:
                 reply = provider(model_id, system, user, self.settings.llm_temperature)
                 break
-            except RETRYABLE_ERRORS as error:
+            except openai.RateLimitError as error:
+                self.sleep(rate_limit_wait(error, attempt, step))
+            except SERVER_ERRORS as error:
                 if attempt == MAX_PROVIDER_ATTEMPTS:
                     raise LLMCallError(f"LLM step {step}: provider failed {attempt} times: {error}") from error
                 self.sleep(2 ** (attempt - 1))
             except openai.APIStatusError as error:
                 raise LLMCallError(
-                    f"LLM step {step}: provider returned {error.status_code}: {error.message}"
+                    f"LLM step {step}: provider returned {error.status_code}: {provider_message(error)}"
                 ) from error
         response = LLMResponse(
             text=reply.text,
