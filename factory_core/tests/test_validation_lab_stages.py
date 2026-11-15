@@ -15,7 +15,7 @@ from tests.conftest import HERO_FOLDER, decide, live_settings, load_example, pip
 STAGE_ORDER = ["discover", "document", "redevelop", "validate", "monitor"]
 
 
-def recording_services(seen: dict[str, dict]) -> httpx.MockTransport:
+def recording_services(seen: dict[str, dict], overrides: dict[str, dict] | None = None) -> httpx.MockTransport:
     """Fake redev_engine and validation_lab that answer with the contract examples and keep each request."""
     answers = {
         "/redevelop": load_example("redevelop_result.M001.json"),
@@ -35,6 +35,7 @@ def recording_services(seen: dict[str, dict]) -> httpx.MockTransport:
         },
         "/monitor/run": load_example("monitoring_result.M001.json"),
     }
+    answers |= overrides or {}
 
     def handler(request: httpx.Request) -> httpx.Response:
         """Keep the request body and answer from the examples."""
@@ -106,6 +107,40 @@ def test_model_without_rebuild_is_validated_on_golden_scores(hero_estate) -> Non
     assert seen["/validate"]["scores"]["oot_path"] == f"{HERO_FOLDER}/golden/scored_oot_legacy.csv"
     assert seen["/validate"]["model_module_path"] is None
     assert seen["/report"]["parity_summary"] is None
+
+
+def no_golden_rebuild() -> dict:
+    """A rebuild that was translated, tested and scored, with no legacy outputs to compare against (M001)."""
+    result = load_example("redevelop_result.M001.json")
+    not_applicable = {"status": "NOT_APPLICABLE", "max_abs_diff": None, "mismatched_records": None}
+    levels = [
+        level | not_applicable | {"match_rate": None, "psi": None, "detail": "No legacy outputs exist"}
+        for level in result["parity"]["levels"]
+    ]
+    paths = {"certificate_md_path": None, "certificate_json_path": None, "mismatch_sample_path": None}
+    parity = result["parity"] | paths | {"passed": False, "records_compared": 0, "levels": levels}
+    return result | {"status": "TRANSLATED_NO_GOLDEN", "parity": parity}
+
+
+def test_rebuild_without_golden_outputs_is_validated_on_its_own_scores(hero_estate) -> None:
+    """A rebuild with no legacy outputs is validated on its rebuilt scores, and the report says parity is unproven."""
+    seen: dict[str, dict] = {}
+    services = recording_services(seen, {"/redevelop": no_golden_rebuild()})
+    settings = dataclasses.replace(live_settings(hero_estate), use_stubs=False)
+    app = create_app(settings, llm_provider=pipeline_provider(), service_transport=services, background=False)
+    with TestClient(app) as client:
+        run = client.get(f"/api/runs/{run_through(client, STAGE_ORDER)}").json()
+    assert run["status"] == "COMPLETED"
+    assert run["stages"][2]["summary"].endswith("No legacy outputs exist, so parity could not be checked.")
+    assert seen["/validate"]["scores"]["dev_path"] == "artifacts/M001/redevelop/scored_dev.csv"
+    assert seen["/validate"]["model_module_path"] == "artifacts/M001/redevelop/model.py"
+    assert seen["/report"]["parity_summary"] == {
+        "status": "TRANSLATED_NO_GOLDEN",
+        "records_compared": 0,
+        "max_abs_diff_pd": None,
+        "decision_match_rate": None,
+        "certificate_md_path": None,
+    }
 
 
 def test_failed_validation_is_shown_as_a_failed_stage(hero_estate) -> None:

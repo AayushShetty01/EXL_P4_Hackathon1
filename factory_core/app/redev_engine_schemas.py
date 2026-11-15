@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.schemas import ContractModel, Language, ParityLevelStatus, RedevelopStatus, ServiceModel
+from app.schemas import ContractModel, ParityLevelStatus, RedevelopStatus, ServiceModel
 
 
 class RedevelopRequest(ContractModel):
@@ -109,7 +109,7 @@ class RedevelopResult(ServiceModel):
     model_id: str
     run_id: str
     status: RedevelopStatus
-    source_language: Language
+    source_language: str  # A language, or "unknown" when the rebuild failed before the manifest was read.
     target_language: str
     iterations: list[RedevelopIteration] = []
     generated_files: list[GeneratedFile] = []

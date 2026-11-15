@@ -1,6 +1,7 @@
 """The work of the validate and monitor stages (stamps 4 and 5); both call validation_lab.
 
-Scores come from the rebuild when parity passed, otherwise from the legacy golden files. Feature columns
+Scores come from the rebuild when it was translated and scored (parity passed, or there are no legacy
+outputs to compare against), otherwise from the legacy golden files. Feature columns
 are the discovered inputs that exist in the data header. All numbers come from validation_lab; the
 validator agent only writes words around them.
 """
@@ -21,6 +22,7 @@ from app.stage_result_schemas import ParitySummary, ReportPaths, ReportRequest, 
 from app.validation_lab_schemas import ValidateData, ValidateRequest, ValidateScores
 
 SCORE_COLUMNS = {"pd_col": "pd", "score_col": "score", "decision_col": "decision"}
+REBUILT_STATUSES = ("PARITY_PASSED", "TRANSLATED_NO_GOLDEN")
 MONITORING_BATCHES = 6
 MONITORING_BATCH_SIZE = 3000
 DRIFT_START_BATCH = 4
@@ -86,7 +88,7 @@ def model_data(work: StageWork, record: InventoryRecord) -> ModelData:
     dev_path, oot_path = f"{model.folder}/{manifest.data.dev_path}", f"{model.folder}/{manifest.data.oot_path}"
     stored = latest_stage_output(work.session, model.model_id, "redevelopment")
     rebuild = RedevelopResult.model_validate(stored) if stored else None
-    if rebuild and rebuild.status == "PARITY_PASSED":
+    if rebuild and rebuild.status in REBUILT_STATUSES:
         files = {generated.kind: generated.path for generated in rebuild.generated_files}
         folder = f"artifacts/{model.model_id}/redevelop"
         scores_dev = files.get("scores_dev", f"{folder}/scored_dev.csv")

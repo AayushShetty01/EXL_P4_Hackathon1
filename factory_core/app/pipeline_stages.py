@@ -84,7 +84,9 @@ def redevelopment_summary(result: RedevelopResult) -> str:
     parts = [f"Redevelopment status {result.status} after {len(result.iterations)} iterations."]
     if result.unit_tests:
         parts.append(f"{result.unit_tests.passed} of {result.unit_tests.total} unit tests passed.")
-    if result.parity:
+    if result.status == "TRANSLATED_NO_GOLDEN":
+        parts.append("No legacy outputs exist, so parity could not be checked.")
+    elif result.parity:
         levels = {level.level: level for level in result.parity.levels}
         record_level, decision_level = levels.get("L2_record_scores"), levels.get("L3_decisions")
         parts.append(f"{result.parity.records_compared} records compared.")

@@ -1,8 +1,9 @@
 """Drift recall: how many seeded document discrepancies the drift detector found.
 
 Run from the factory_core folder: python -m scripts.evaluate_document_drift
-A seeded discrepancy is found when a drift item matches its keywords, covers its legacy line, or shares
-most words of its topic. Recall is reported on VERIFIED items, and separately including UNVERIFIED ones.
+A seeded discrepancy is found when a drift item matches its keywords, cites a line of the same file inside
+its legacy or code evidence, covers its legacy line, or (when the key gives no lines) shares most words of
+its topic. Recall is reported on VERIFIED items, and separately including UNVERIFIED ones.
 Writes artifacts/evaluation/document_drift.json for the deck.
 """
 
@@ -23,10 +24,30 @@ def item_text(item: dict[str, Any]) -> str:
     return " ".join(str(item.get(name, "")) for name in ("topic", "legacy_doc_says", "code_says"))
 
 
+def line_range(evidence: Any) -> tuple[str, int, int] | None:
+    """File, first line and last line of an evidence object; None when it has no line numbers."""
+    if not isinstance(evidence, dict) or not isinstance(evidence.get("start_line"), int):
+        return None
+    start = evidence["start_line"]
+    end = evidence["end_line"] if isinstance(evidence.get("end_line"), int) else start
+    return str(evidence.get("file", "")), start, end
+
+
+def same_lines(seeded: Any, cited: Any) -> bool:
+    """True when the cited evidence shares at least one line of the same file with the seeded evidence."""
+    expected, actual = line_range(seeded), line_range(cited)
+    if expected is None or actual is None:
+        return False
+    return expected[0] == actual[0] and actual[1] <= expected[2] and expected[1] <= actual[2]
+
+
 def is_found(seeded: dict[str, Any], item: dict[str, Any]) -> bool:
     """True when a drift item describes the seeded discrepancy."""
     if seeded.get("keywords"):
         return text_matches({"keywords": seeded["keywords"]}, item_text(item))
+    sides = ("legacy_evidence", "code_evidence")
+    if any(line_range(seeded.get(side)) for side in sides):
+        return any(same_lines(seeded.get(side), item.get(side)) for side in sides)
     legacy = item.get("legacy_evidence") or {}
     if seeded.get("legacy_line") and legacy.get("start_line"):
         return legacy["start_line"] <= seeded["legacy_line"] <= legacy.get("end_line", legacy["start_line"])
