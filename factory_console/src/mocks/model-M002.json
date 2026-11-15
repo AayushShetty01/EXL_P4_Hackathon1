@@ -1,0 +1,48 @@
+{
+  "model_id": "M002",
+  "model_name": "Personal Loan PD GLM",
+  "model_type": "credit_pd",
+  "purpose": "Illustrative sample: estimates default risk for personal lending.",
+  "business_line": "Personal Lending",
+  "model_owner": "Head of Personal Lending Risk",
+  "language": "R",
+  "algorithm": "Binomial generalized linear model",
+  "target_variable": "default_flag",
+  "input_variables": [
+    {
+      "name": "credit_history",
+      "description": "Credit history category",
+      "transformation": "Factor encoding"
+    }
+  ],
+  "outputs": ["pd", "score", "decision"],
+  "upstream_dependencies": [],
+  "downstream_uses": ["Personal loan approval decision"],
+  "exposure_gbp_m": 320,
+  "regulatory_use": "Internal credit risk",
+  "customer_facing": true,
+  "tiering": {
+    "tier": "Tier 1",
+    "materiality_score": 2,
+    "complexity_score": 2,
+    "rationale": ["Illustrative high materiality credit model."]
+  },
+  "doc_status": "OUTDATED",
+  "doc_last_updated": "2020-04-15",
+  "last_code_change": "2022-07-12",
+  "last_validated": "2022-10-03",
+  "next_validation_due": "2023-10-03",
+  "source_files": [],
+  "field_evidence": {},
+  "open_questions": [],
+  "pipeline_status": {
+    "discover": "APPROVED",
+    "document": "AWAITING_REVIEW",
+    "redevelop": "PENDING",
+    "validate": "PENDING",
+    "monitor": "PENDING"
+  },
+  "revalidation_required": false,
+  "created_at": "2026-11-14T09:00:00Z",
+  "updated_at": "2026-11-14T09:00:00Z"
+}

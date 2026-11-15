@@ -1,0 +1,321 @@
+{
+  "model_id": "M001",
+  "result": {
+    "model_id": "M001",
+    "run_id": "run_M001_sample",
+    "status": "COMPLETED",
+    "overall_rating": "AMBER",
+    "sample_sizes": {
+      "dev": 700,
+      "oot": 300
+    },
+    "sections": {
+      "data_quality": {
+        "rating": "GREEN",
+        "checks": [
+          {
+            "check": "missing_rate_max",
+            "value": 0.01,
+            "threshold": 0.05,
+            "passed": true
+          },
+          {
+            "check": "duplicate_ids",
+            "value": 0,
+            "threshold": 0,
+            "passed": true
+          }
+        ],
+        "target_rate": {
+          "dev": 0.2,
+          "oot": 0.21
+        }
+      },
+      "discrimination": {
+        "rating": "GREEN",
+        "dev": {
+          "auc": 0.76,
+          "gini": 0.52,
+          "ks": 0.39
+        },
+        "oot": {
+          "auc": 0.74,
+          "gini": 0.48,
+          "ks": 0.36
+        },
+        "gini_relative_drop": 0.08
+      },
+      "calibration": {
+        "rating": "AMBER",
+        "oot": {
+          "brier": 0.15,
+          "mean_predicted_pd": 0.19,
+          "observed_default_rate": 0.21,
+          "observed_over_expected": 1.11,
+          "hosmer_lemeshow_stat": 12.4,
+          "hosmer_lemeshow_p": 0.04
+        },
+        "decile_table": [
+          {
+            "decile": 1,
+            "n": 30,
+            "mean_pd": 0.03,
+            "observed_rate": 0.04
+          },
+          {
+            "decile": 5,
+            "n": 30,
+            "mean_pd": 0.16,
+            "observed_rate": 0.2
+          },
+          {
+            "decile": 10,
+            "n": 30,
+            "mean_pd": 0.49,
+            "observed_rate": 0.53
+          }
+        ]
+      },
+      "stability": {
+        "rating": "GREEN",
+        "psi_score": 0.06,
+        "csi": [
+          {
+            "feature": "PAY_0",
+            "csi": 0.04,
+            "rating": "GREEN"
+          }
+        ]
+      },
+      "backtest": {
+        "rating": "GREEN",
+        "bands": [
+          {
+            "band": "A",
+            "pd_min": 0,
+            "pd_max": 0.08,
+            "n": 60,
+            "mean_pd": 0.04,
+            "observed_rate": 0.05,
+            "binomial_p": 0.4,
+            "light": "GREEN"
+          }
+        ]
+      },
+      "fairness": {
+        "rating": "AMBER",
+        "favourable_outcome": "APPROVE",
+        "by_attribute": [
+          {
+            "attribute": "SEX",
+            "groups": [
+              {
+                "group": "Group 1",
+                "n": 140,
+                "approval_rate": 0.71,
+                "approval_rate_good_customers": 0.82,
+                "approval_rate_bad_customers": 0.39,
+                "observed_default_rate": 0.24,
+                "mean_pd": 0.22
+              },
+              {
+                "group": "Group 2",
+                "n": 160,
+                "approval_rate": 0.75,
+                "approval_rate_good_customers": 0.84,
+                "approval_rate_bad_customers": 0.42,
+                "observed_default_rate": 0.2,
+                "mean_pd": 0.19
+              }
+            ],
+            "demographic_parity_ratio": 0.95,
+            "equal_opportunity_diff": 0.02,
+            "equalized_odds_diff": 0.03,
+            "rating": "GREEN"
+          },
+          {
+            "attribute": "AGE_BAND",
+            "groups": [
+              {
+                "group": "Under 35",
+                "n": 90,
+                "approval_rate": 0.68,
+                "approval_rate_good_customers": 0.8,
+                "approval_rate_bad_customers": 0.36,
+                "observed_default_rate": 0.25,
+                "mean_pd": 0.23
+              },
+              {
+                "group": "35 and over",
+                "n": 210,
+                "approval_rate": 0.78,
+                "approval_rate_good_customers": 0.85,
+                "approval_rate_bad_customers": 0.44,
+                "observed_default_rate": 0.19,
+                "mean_pd": 0.18
+              }
+            ],
+            "demographic_parity_ratio": 0.87,
+            "equal_opportunity_diff": 0.05,
+            "equalized_odds_diff": 0.08,
+            "rating": "AMBER"
+          }
+        ]
+      },
+      "sensitivity": {
+        "rating": "GREEN",
+        "shocks": [
+          {
+            "feature": "LIMIT_BAL",
+            "shock": "plus 10 percent",
+            "mean_pd_change": -0.003,
+            "decision_flip_rate": 0.01
+          }
+        ]
+      },
+      "benchmark": {
+        "rating": "GREEN",
+        "challenger": "gradient_boosting",
+        "champion_auc_oot": 0.74,
+        "challenger_auc_oot": 0.75,
+        "auc_uplift": 0.01
+      }
+    },
+    "findings": [
+      {
+        "id": "F001",
+        "section": "calibration",
+        "severity": "HIGH",
+        "title": "Illustrative calibration finding",
+        "detail": "Mock finding: review calibration results before relying on this sample.",
+        "evidence": {
+          "metric": "hosmer_lemeshow_p",
+          "value": 0.04,
+          "threshold": "0.05 or above is green"
+        },
+        "recommendation": "Review calibration by decile with a qualified validator."
+      },
+      {
+        "id": "F002",
+        "section": "fairness",
+        "severity": "MEDIUM",
+        "title": "Illustrative age-band fairness finding",
+        "detail": "Mock finding: the sample's group comparison should be reviewed.",
+        "evidence": {
+          "metric": "equalized_odds_diff",
+          "value": 0.08,
+          "threshold": "0.05 or below is green"
+        },
+        "recommendation": "Assess the causes and impacts of observed group differences."
+      },
+      {
+        "id": "F003",
+        "section": "stability",
+        "severity": "LOW",
+        "title": "Illustrative stability observation",
+        "detail": "Mock finding: monitor this feature in later review cycles.",
+        "evidence": {
+          "metric": "psi_score",
+          "value": 0.06,
+          "threshold": "Below 0.10 is green"
+        },
+        "recommendation": "Continue monitoring score distribution."
+      }
+    ],
+    "charts": [
+      {
+        "id": "roc_oot",
+        "title": "ROC curve, holdout",
+        "path": "artifacts/M001/validation/charts/roc_oot.png"
+      },
+      {
+        "id": "calibration_oot",
+        "title": "Calibration by decile, holdout",
+        "path": "artifacts/M001/validation/charts/calibration_oot.png"
+      },
+      {
+        "id": "score_distribution",
+        "title": "Output distribution, development and holdout",
+        "path": "artifacts/M001/validation/charts/score_distribution.png"
+      }
+    ],
+    "series": {
+      "roc_oot": [
+        {
+          "fpr": 0,
+          "tpr": 0
+        },
+        {
+          "fpr": 0.1,
+          "tpr": 0.4
+        },
+        {
+          "fpr": 1,
+          "tpr": 1
+        }
+      ],
+      "calibration_oot": [
+        {
+          "decile": 1,
+          "mean_pd": 0.03,
+          "observed_rate": 0.04
+        },
+        {
+          "decile": 5,
+          "mean_pd": 0.16,
+          "observed_rate": 0.2
+        }
+      ],
+      "score_distribution": [
+        {
+          "bin": "D01",
+          "dev_share": 0.1,
+          "oot_share": 0.12
+        },
+        {
+          "bin": "D10",
+          "dev_share": 0.1,
+          "oot_share": 0.08
+        }
+      ]
+    },
+    "thresholds_used": {
+      "auc_green": 0.7,
+      "auc_amber": 0.6,
+      "ks_green": 0.3,
+      "ks_amber": 0.2,
+      "gini_drop_green": 0.1,
+      "gini_drop_amber": 0.2,
+      "oe_band_green": 0.1,
+      "oe_band_amber": 0.2,
+      "hl_p_green": 0.05,
+      "psi_green": 0.1,
+      "psi_amber": 0.25,
+      "dp_ratio_green": 0.8,
+      "dp_ratio_amber": 0.7,
+      "eo_diff_green": 0.05,
+      "eo_diff_amber": 0.1,
+      "benchmark_uplift_amber": 0.03
+    },
+    "result_path": "artifacts/M001/validation/result.json",
+    "duration_seconds": 0.2,
+    "error": null
+  },
+  "narrative": {
+    "executive_summary": "Illustrative sample narrative only. A human reviewer must assess any real result.",
+    "conceptual_soundness": "Mock narrative: review the documented assumptions and intended use.",
+    "findings_commentary": "Mock narrative: investigate the illustrative findings before use.",
+    "conclusion": "This fixture is not a real validation conclusion.",
+    "unverified_numbers": []
+  },
+  "number_grounding": {
+    "numbers_in_narrative": 0,
+    "numbers_verified": 0,
+    "score": 1
+  },
+  "validator_agent_model": "sample-provider/sample-model",
+  "report": {
+    "html_path": "artifacts/M001/validation/validation_report.html",
+    "docx_path": "artifacts/M001/validation/validation_report.docx"
+  }
+}

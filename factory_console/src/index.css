@@ -1,0 +1,229 @@
+/* Loads Tailwind and defines the console's shared visual foundation. */
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #17243b;
+  background: #f5f7fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --navy: #17243b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #237b84;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  width: 248px;
+  height: 100vh;
+  flex: 0 0 248px;
+  flex-direction: column;
+  padding: 28px 18px;
+  color: #e7eef7;
+  background: var(--navy);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 8px 38px;
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: #2f8d94;
+  color: white;
+}
+
+.navigation {
+  display: grid;
+  gap: 7px;
+}
+
+.navigation a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  color: #c6d1df;
+  font-size: 14px;
+}
+
+.navigation a[aria-current="page"],
+.navigation a:hover {
+  color: white;
+  background: #263852;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 0 9px;
+  color: #9fb0c4;
+  font-size: 12px;
+}
+
+.app-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.topbar {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 34px;
+  border-bottom: 1px solid var(--border);
+  background: white;
+}
+
+.topbar h1 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.topbar p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.reviewer-switch {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.reviewer-switch select {
+  min-width: 175px;
+  padding: 8px 30px 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: white;
+  color: var(--navy);
+}
+
+.mode-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 34px;
+  border-bottom: 1px solid #d5e6e8;
+  background: #edf7f7;
+  color: #255e65;
+  font-size: 13px;
+}
+
+.mode-banner[data-mode="snapshot"] {
+  border-color: #e8dfc7;
+  background: #fbf7eb;
+  color: #765d1f;
+}
+
+.page-outlet {
+  padding: 32px 34px;
+}
+
+.welcome-card {
+  max-width: 780px;
+  padding: 34px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: white;
+}
+
+.welcome-card h2 {
+  margin: 0 0 9px;
+  color: var(--navy);
+  font-size: 25px;
+}
+
+.welcome-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    width: 68px;
+    flex-basis: 68px;
+    padding: 20px 10px;
+  }
+
+  .brand {
+    justify-content: center;
+    margin: 0 0 30px;
+  }
+
+  .brand-name,
+  .navigation-label,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .navigation a {
+    justify-content: center;
+    padding: 12px 8px;
+  }
+
+  .topbar,
+  .mode-banner,
+  .page-outlet {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .reviewer-switch span {
+    display: none;
+  }
+
+  .reviewer-switch select {
+    min-width: 130px;
+  }
+}

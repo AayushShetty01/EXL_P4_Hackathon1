@@ -1,0 +1,190 @@
+{
+  "model_id": "M001",
+  "generated_at": "2026-11-14T09:10:00Z",
+  "generated_by_model": "sample-provider/sample-model",
+  "groundedness": {
+    "claims_total": 6,
+    "claims_verified": 5,
+    "claims_unverified": 1,
+    "claims_sme_input_needed": 0,
+    "score": 0.83
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "markdown": "This sample is a credit card probability-of-default scorecard [C001].",
+      "claims": [
+        {
+          "id": "C001",
+          "text": "This sample is a credit card probability-of-default scorecard.",
+          "status": "VERIFIED",
+          "evidence": [
+            {
+              "file": "model_estate/M001_cc_pd_scorecard_sas/code/02_train.sas",
+              "start_line": 12,
+              "end_line": 19,
+              "quote": "proc logistic data=work.dev_woe descending;"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "intended_use",
+      "title": "Intended use",
+      "markdown": "The example supports an approve or decline lending decision [C002].",
+      "claims": [
+        {
+          "id": "C002",
+          "text": "The example supports an approve or decline lending decision.",
+          "status": "VERIFIED",
+          "evidence": [
+            {
+              "file": "model_estate/M001_cc_pd_scorecard_sas/code/03_score.sas",
+              "start_line": 41,
+              "end_line": 41,
+              "quote": "if score < 540 then decision = 'DECLINE';"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "data_and_variables",
+      "title": "Data and variables",
+      "markdown": "PAY_0 is transformed into WoE bins [C003].",
+      "claims": [
+        {
+          "id": "C003",
+          "text": "PAY_0 is transformed into WoE bins.",
+          "status": "VERIFIED",
+          "evidence": [
+            {
+              "file": "model_estate/M001_cc_pd_scorecard_sas/code/01_prepare.sas",
+              "start_line": 22,
+              "end_line": 31,
+              "quote": "PAY_0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "methodology",
+      "title": "Methodology",
+      "markdown": "A logistic regression estimates the default probability [C004].",
+      "claims": [
+        {
+          "id": "C004",
+          "text": "A logistic regression estimates the default probability.",
+          "status": "VERIFIED",
+          "evidence": [
+            {
+              "file": "model_estate/M001_cc_pd_scorecard_sas/code/02_train.sas",
+              "start_line": 12,
+              "end_line": 19,
+              "quote": "proc logistic data=work.dev_woe descending;"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "limitations",
+      "title": "Limitations",
+      "markdown": "The source data is a public sample and does not represent a UK portfolio [C005].",
+      "claims": [
+        {
+          "id": "C005",
+          "text": "The source data is a public sample and does not represent a UK portfolio.",
+          "status": "VERIFIED",
+          "evidence": [
+            {
+              "file": "model_estate/M001_cc_pd_scorecard_sas/manifest.json",
+              "start_line": 1,
+              "end_line": 1,
+              "quote": "M001"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "implementation_and_controls",
+      "title": "Implementation and controls",
+      "markdown": "A reviewer should confirm the current operational approval process [C006].",
+      "claims": [
+        {
+          "id": "C006",
+          "text": "A reviewer should confirm the current operational approval process.",
+          "status": "SME_INPUT_NEEDED",
+          "evidence": []
+        }
+      ]
+    }
+  ],
+  "doc_drift": [
+    {
+      "id": "D001",
+      "severity": "HIGH",
+      "topic": "Decision cutoff",
+      "legacy_doc_says": "Illustrative old document cutoff: 520.",
+      "code_says": "Illustrative sample code cutoff: 540.",
+      "legacy_evidence": {
+        "file": "model_estate/M001_cc_pd_scorecard_sas/docs/model_document_2021.md",
+        "start_line": 88,
+        "end_line": 88,
+        "quote": "below 520 are declined"
+      },
+      "code_evidence": {
+        "file": "model_estate/M001_cc_pd_scorecard_sas/code/03_score.sas",
+        "start_line": 41,
+        "end_line": 41,
+        "quote": "if score < 540 then decision = 'DECLINE';"
+      },
+      "status": "VERIFIED"
+    },
+    {
+      "id": "D002",
+      "severity": "MEDIUM",
+      "topic": "Input variable",
+      "legacy_doc_says": "The old document lists six scorecard inputs.",
+      "code_says": "The training code shows eight WoE inputs.",
+      "legacy_evidence": {
+        "file": "model_estate/M001_cc_pd_scorecard_sas/docs/model_document_2021.md",
+        "start_line": 42,
+        "end_line": 48,
+        "quote": "model inputs"
+      },
+      "code_evidence": {
+        "file": "model_estate/M001_cc_pd_scorecard_sas/code/02_train.sas",
+        "start_line": 12,
+        "end_line": 19,
+        "quote": "model default_flag"
+      },
+      "status": "VERIFIED"
+    },
+    {
+      "id": "D003",
+      "severity": "LOW",
+      "topic": "Review date",
+      "legacy_doc_says": "The document is dated 2021.",
+      "code_says": "The estate register lists a later code change.",
+      "legacy_evidence": {
+        "file": "model_estate/M001_cc_pd_scorecard_sas/docs/model_document_2021.md",
+        "start_line": 1,
+        "end_line": 1,
+        "quote": "2021"
+      },
+      "code_evidence": {
+        "file": "model_estate/M001_cc_pd_scorecard_sas/code/03_score.sas",
+        "start_line": 1,
+        "end_line": 1,
+        "quote": "score"
+      },
+      "status": "UNVERIFIED"
+    }
+  ],
+  "markdown_path": "artifacts/M001/document/model_document.md"
+}

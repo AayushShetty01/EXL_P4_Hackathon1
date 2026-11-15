@@ -1,0 +1,103 @@
+{
+  "model_id": "M001",
+  "status": "COMPLETED",
+  "simulated": true,
+  "reference_sample": "dev",
+  "batches": [
+    {
+      "batch": "2026_01",
+      "n": 300,
+      "psi_score": 0.02,
+      "max_csi": {
+        "feature": "PAY_0",
+        "csi": 0.03
+      },
+      "auc": 0.75,
+      "observed_default_rate": 0.2,
+      "mean_pd": 0.19,
+      "alert": "GREEN"
+    },
+    {
+      "batch": "2026_02",
+      "n": 300,
+      "psi_score": 0.04,
+      "max_csi": {
+        "feature": "PAY_0",
+        "csi": 0.05
+      },
+      "auc": 0.75,
+      "observed_default_rate": 0.21,
+      "mean_pd": 0.2,
+      "alert": "GREEN"
+    },
+    {
+      "batch": "2026_03",
+      "n": 300,
+      "psi_score": 0.08,
+      "max_csi": {
+        "feature": "PAY_0",
+        "csi": 0.09
+      },
+      "auc": 0.73,
+      "observed_default_rate": 0.22,
+      "mean_pd": 0.21,
+      "alert": "GREEN"
+    },
+    {
+      "batch": "2026_04",
+      "n": 300,
+      "psi_score": 0.14,
+      "max_csi": {
+        "feature": "PAY_0",
+        "csi": 0.16
+      },
+      "auc": 0.72,
+      "observed_default_rate": 0.23,
+      "mean_pd": 0.22,
+      "alert": "AMBER"
+    },
+    {
+      "batch": "2026_05",
+      "n": 300,
+      "psi_score": 0.21,
+      "max_csi": {
+        "feature": "PAY_0",
+        "csi": 0.24
+      },
+      "auc": 0.7,
+      "observed_default_rate": 0.25,
+      "mean_pd": 0.24,
+      "alert": "AMBER"
+    },
+    {
+      "batch": "2026_06",
+      "n": 300,
+      "psi_score": 0.29,
+      "max_csi": {
+        "feature": "PAY_0",
+        "csi": 0.31
+      },
+      "auc": 0.68,
+      "observed_default_rate": 0.27,
+      "mean_pd": 0.25,
+      "alert": "RED"
+    }
+  ],
+  "alerts": [
+    {
+      "batch": "2026_06",
+      "level": "RED",
+      "rule": "Illustrative score PSI above 0.25",
+      "value": 0.29
+    }
+  ],
+  "revalidation_triggered": true,
+  "trigger_reason": "Illustrative mock alert: score PSI exceeds the sample threshold.",
+  "thresholds_used": {
+    "psi_green": 0.1,
+    "psi_amber": 0.25,
+    "auc_drop_trigger": 0.05
+  },
+  "result_path": "artifacts/M001/monitoring/result.json",
+  "error": null
+}
