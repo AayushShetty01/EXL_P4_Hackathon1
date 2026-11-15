@@ -1,0 +1,37 @@
+name: SonarCloud
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history for accurate new-code detection and blame
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Each service pins its own stack, so each gets its own virtualenv.
+      - name: Test Python services with coverage
+        run: |
+          for s in factory_core redev_engine validation_lab; do
+            python -m venv "$RUNNER_TEMP/venv-$s"
+            "$RUNNER_TEMP/venv-$s/bin/pip" install -q -r "$s/requirements.txt" pytest-cov==7.1.0
+            (cd "$s" && "$RUNNER_TEMP/venv-$s/bin/python" -m pytest -q --cov=app --cov-report="xml:../coverage-$s.xml")
+            # Make report paths repo-relative so SonarCloud maps them to source files.
+            sed -i "s#<source>.*</source>#<source>$s/app</source>#" "coverage-$s.xml"
+          done
+
+      - uses: SonarSource/sonarqube-scan-action@2f77a1ec69fb1d595b06f35ab27e97605bdef703  # v5.3.2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io

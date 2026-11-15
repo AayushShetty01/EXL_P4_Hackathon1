@@ -18,7 +18,7 @@ def measure(module_path: str, frame: pd.DataFrame, features: list[str],
     path = safe_path(module_path)
     if path.suffix != ".py":
         raise LabError("INVALID_MODULE", "The scoring module must be a Python source file.")
-    payload = {"path": str(path), "frame": frame.to_json(orient="split"), "features": features,
+    payload = {"path": module_path, "frame": frame.to_json(orient="split"), "features": features,
                "id_col": id_col, "pd_col": pd_col, "decision": decision}
     try:
         child = subprocess.run([sys.executable, "-m", "app.metrics.sensitivity"], input=json.dumps(payload),
@@ -43,13 +43,17 @@ def worker(payload: dict) -> dict:
     import socket
     from contextlib import redirect_stdout
 
+    # Re-validate in the child: stdin is a trust boundary, never open a raw path from it.
+    path = safe_path(payload["path"])
+    if path.suffix != ".py":
+        raise LabError("INVALID_MODULE", "The scoring module must be a Python source file.")
+
     def block_network(*args, **kwargs):
         """Reject accidental outbound connections during local scoring."""
         raise RuntimeError("Network access is disabled during sensitivity scoring.")
 
     socket.socket = block_network
     socket.create_connection = block_network
-    path = Path(payload["path"])
     tree = ast.parse(path.read_text(encoding="utf-8"))
     permitted = {"numpy", "pandas", "scipy", "sklearn", "statsmodels", "math", "json", "typing", "__future__"}
     for node in ast.walk(tree):

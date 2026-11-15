@@ -1,6 +1,7 @@
 # Runtime and test dependencies for Python 3.11 and newer.
-fastapi==0.115.12
-uvicorn==0.34.2
+fastapi==0.162.7
+starlette==1.10.0
+uvicorn==0.54.0
 pydantic==2.11.4
 pandas==2.2.3
 numpy==2.2.5
@@ -11,7 +12,7 @@ fairlearn==0.12.0
 matplotlib==3.10.3
 Jinja2==3.1.6
 python-docx==1.1.2
-python-dotenv==1.1.0
+python-dotenv==1.2.4
 markdown-it-py==3.0.0
-pytest==8.3.5
+pytest==9.2.0
 httpx==0.28.1

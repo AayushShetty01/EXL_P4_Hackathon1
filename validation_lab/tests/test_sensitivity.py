@@ -1,6 +1,15 @@
 """Check timed scoring isolation, alignment and numeric shock evidence."""
 import pandas as pd
-from app.metrics.sensitivity import measure
+import pytest
+from app.config import LabError
+from app.metrics.sensitivity import measure, worker
+
+
+@pytest.mark.parametrize("path", ["../outside.py", "/etc/passwd", "validation_lab/sample_data/x.csv"])
+def test_worker_rejects_untrusted_paths(repository, path):
+    """The child re-validates the module path it receives on stdin."""
+    with pytest.raises(LabError):
+        worker({"path": path})
 
 
 def test_shock_measurements(repository):
