@@ -11,13 +11,13 @@ from typing import Any
 
 from app.stage_result_schemas import NumberGrounding
 
-NUMBER_PATTERN = re.compile(r"(?<![\w./-])[-+]?\d+(?:,\d{3})*(?:\.\d+)?(?:[eE][-+]?\d+)?%?(?![\w/])")
+NUMBER_PATTERN = re.compile(r"(?<![\w./-])[-+]?\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?%?(?![\w/])")
 LIST_MARKER_PATTERN = re.compile(r"^\s*\d+[.)]\s", re.MULTILINE)
 
 
 def extract_numbers(text: str) -> list[str]:
     """Every number written in a text, leaving out list markers such as "1." at the start of a line."""
-    return NUMBER_PATTERN.findall(LIST_MARKER_PATTERN.sub(" ", text))
+    return [token.rstrip(",") for token in NUMBER_PATTERN.findall(LIST_MARKER_PATTERN.sub(" ", text))]
 
 
 def source_values(*sources: Any) -> set[float]:

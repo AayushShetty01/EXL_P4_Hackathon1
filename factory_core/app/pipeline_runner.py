@@ -135,7 +135,7 @@ class PipelineRunner:
             try:
                 self.graph.invoke(payload, {"configurable": {"thread_id": run_id}})
             except Exception as error:  # the run must show the failure instead of hanging
-                logger.exception("Pipeline of %s stopped", run_id)
+                logger.exception("A pipeline run stopped unexpectedly; its failure is stored with the run")
                 self.fail_running_stage(run_id, f"Pipeline error: {type(error).__name__}: {error}")
 
     def fail_running_stage(self, run_id: str, message: str) -> None:

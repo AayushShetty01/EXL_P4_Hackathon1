@@ -133,7 +133,7 @@ def execute_stage(context: PipelineContext, run_id: str, stage: str, work: Stage
         except Exception as error:  # every failure must end the stage visibly, never kill the run thread silently
             session.rollback()
             message = stage_error_message(error)
-            logger.warning("Stage %s of %s failed: %s", stage, run_id, message)
+            logger.warning("The %s stage of a run failed; the error is stored with the run", stage)
             return fail_stage(context, run_id, stage, message, time.perf_counter() - started, recorder)
         row = stage_row(session, run_id, stage)
         run = session.get(RunRow, run_id)

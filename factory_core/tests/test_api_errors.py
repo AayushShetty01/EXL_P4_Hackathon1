@@ -3,6 +3,7 @@
 from fastapi.testclient import TestClient
 
 from app.api.api_errors import api_error
+from app.main import create_app
 
 
 def test_api_error_carries_code_and_message() -> None:
@@ -31,3 +32,19 @@ def test_wrong_method_uses_the_error_body(client: TestClient) -> None:
     response = client.delete("/api/models")
     assert response.status_code == 405
     assert response.json()["error"]["code"] == "METHOD_NOT_ALLOWED"
+
+
+def test_unexpected_error_is_a_500_and_request_text_never_reaches_the_log(settings, caplog) -> None:
+    """A crash answers INTERNAL_ERROR, and text from the request URL is not written to the log."""
+    app = create_app(settings)
+
+    @app.get("/api/broken")
+    def broken() -> dict:
+        """Fail on purpose."""
+        raise RuntimeError("broken on purpose")
+
+    with TestClient(app, raise_server_exceptions=False) as client:
+        response = client.get("/api/broken", params={"note": "\nforged log line"})
+    assert response.status_code == 500
+    assert response.json() == {"error": {"code": "INTERNAL_ERROR", "message": "RuntimeError: broken on purpose"}}
+    assert "forged log line" not in caplog.text

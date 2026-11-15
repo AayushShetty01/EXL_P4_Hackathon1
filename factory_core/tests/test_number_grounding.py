@@ -51,3 +51,8 @@ def test_text_without_numbers_is_fully_grounded() -> None:
     """A narrative with no numbers scores 1.0."""
     grounding, unverified = grounding_score("Discrimination is strong.", set())
     assert (grounding.score, unverified) == (1.0, [])
+
+
+def test_numbers_followed_by_a_comma_keep_their_value() -> None:
+    """A thousands separator is part of a number; a comma after it is not."""
+    assert extract_numbers("Exposure is 1,850, the AUC 0.764, and 12% of cases.") == ["1,850", "0.764", "12%"]
