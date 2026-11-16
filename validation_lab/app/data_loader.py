@@ -10,7 +10,7 @@ def read_csv(path: str, id_col: str) -> pd.DataFrame:
     """Read identifiers as strings so leading zeros cannot disappear."""
     try:
         return pd.read_csv(safe_path(path), dtype={id_col: "string"})
-    except (ValueError, pd.errors.ParserError, pd.errors.EmptyDataError, UnicodeError) as exc:
+    except ValueError as exc:  # ParserError, EmptyDataError and UnicodeError all subclass ValueError
         raise LabError("INVALID_DATA", f"Cannot read CSV: {path}") from exc
 
 

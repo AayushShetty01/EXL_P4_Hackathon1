@@ -42,3 +42,11 @@ def test_invalid_scores(repository, column, value, code):
     with pytest.raises(LabError) as error:
         load_scored("data.csv", "scores.csv", "ID", "target")
     assert error.value.code == code
+
+
+def test_unreadable_csv_is_invalid_data(repository):
+    """An empty or malformed CSV surfaces as an input error, not a crash."""
+    (repository / "data.csv").write_text("")
+    with pytest.raises(LabError) as error:
+        load_scored("data.csv", "scores.csv", "ID", "target")
+    assert error.value.code == "INVALID_DATA"
