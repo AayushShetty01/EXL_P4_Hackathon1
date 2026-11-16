@@ -2,10 +2,10 @@
 import pandas as pd
 import pytest
 from app.config import LabError
-from app.metrics.sensitivity import measure, worker
+from app.metrics.sensitivity import _checked_score, _has_unsupported_imports, measure, worker
 
 
-@pytest.mark.parametrize("path", ["../outside.py", "/etc/passwd", "validation_lab/sample_data/x.csv"])
+@pytest.mark.parametrize("path", ["../outside.py", "/etc/passwd", "validation_lab/sample_data/dev.csv"])
 def test_worker_rejects_untrusted_paths(repository, path):
     """The child re-validates the module path it receives on stdin."""
     with pytest.raises(LabError):
@@ -43,3 +43,34 @@ def test_network_import_rejected(repository):
     (repository / "model.py").write_text('"""Unsupported import test."""\nimport urllib.request\n')
     result, error = measure("model.py", pd.DataFrame({"ID": ["1"]}), [], "ID", "pd", "decision")
     assert result is None and "unsupported imports" in error
+
+
+def test_measure_rejects_non_python_module(repository):
+    """Only Python source files are executed as scorers."""
+    with pytest.raises(LabError):
+        measure("validation_lab/sample_data/dev.csv", pd.DataFrame(), [], "ID", "pd", "decision")
+
+
+def test_from_import_outside_stack_is_unsupported():
+    """From imports are checked against the permitted stack as well as plain imports."""
+    assert _has_unsupported_imports("from os import path\n")
+    assert not _has_unsupported_imports("from numpy import exp\nimport pandas as pd\n")
+
+
+@pytest.mark.parametrize("output, message", [
+    ({"ID": ["1"], "pd": [.1]}, "missing fields"),
+    ({"ID": ["9"], "pd": [.1], "decision": ["APPROVE"]}, "mismatched IDs"),
+    ({"ID": ["1"], "pd": [float("inf")], "decision": ["APPROVE"]}, "invalid probabilities"),
+    ({"ID": ["1"], "pd": [.1], "decision": ["MAYBE"]}, "invalid decisions"),
+])
+def test_checked_score_rejects_bad_scorer_output(output, message):
+    """Each malformed scorer output is rejected with its own reason."""
+    class Scorer:
+        """Stand-in scoring module returning a fixed frame."""
+        @staticmethod
+        def score(_data):
+            """Return the canned output."""
+            return pd.DataFrame(output)
+
+    with pytest.raises(ValueError, match=message):
+        _checked_score(Scorer, pd.DataFrame({"ID": ["1"]}), pd.Series(["1"]), "ID", "pd", "decision")

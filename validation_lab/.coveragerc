@@ -1,0 +1,3 @@
+[run]
+# The sensitivity scorer runs in a child process; trace it too.
+patch = subprocess
