@@ -62,7 +62,7 @@ export interface RedevelopResult {
   iterations: RedevelopmentIteration[]
   generated_files: GeneratedFile[]
   line_mapping: LineMapping[]
-  unit_tests: { total: number; passed: number; failed: number }
+  unit_tests: { total: number; passed: number; failed: number } | null
   parity: ParityResult | null
   pitfalls_checked: string[]
   mlflow: Record<string, string> | null

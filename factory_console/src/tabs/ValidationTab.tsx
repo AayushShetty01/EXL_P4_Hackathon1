@@ -197,7 +197,7 @@ export function ValidationTab({ modelId }: { modelId: string }) {
                 <li key={finding.id} className="rounded-lg border border-slate-100 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold text-slate-900">{finding.title}</h4><StatusBadge status={finding.severity} /></div>
                   <p className="mt-2 text-sm text-slate-700">{finding.detail}</p>
-                  <p className="mt-2 text-xs text-slate-600">Evidence: {finding.evidence.metric} = {String(finding.evidence.value)} · threshold: {finding.evidence.threshold}</p>
+                  {finding.evidence && <p className="mt-2 text-xs text-slate-600">Evidence: {finding.evidence.metric} = {String(finding.evidence.value)} · threshold: {finding.evidence.threshold}</p>}
                   <p className="mt-2 text-sm text-teal-900"><strong>Recommendation:</strong> {finding.recommendation}</p>
                 </li>
               ))}

@@ -55,7 +55,7 @@ export interface Finding {
   severity: FindingSeverity
   title: string
   detail: string
-  evidence: { metric: string; value: number | string; threshold: string }
+  evidence: { metric: string; value: number | string; threshold: string } | null
   recommendation: string
 }
 

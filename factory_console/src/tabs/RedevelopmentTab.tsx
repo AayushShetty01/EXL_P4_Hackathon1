@@ -40,7 +40,7 @@ export function RedevelopmentTab({ modelId }: { modelId: string }) {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Summary label="Parity certificate" value={certificateLabel(result.status)} />
         <Summary label="Records compared" value={parity ? parity.records_compared.toLocaleString() : 'None'} />
-        <Summary label="Unit tests" value={`${result.unit_tests.passed} / ${result.unit_tests.total} passed`} />
+        <Summary label="Unit tests" value={result.unit_tests ? `${result.unit_tests.passed} / ${result.unit_tests.total} passed` : 'No unit test result'} />
         <Summary label="Iterations" value={String(result.iterations.length)} />
       </section>
 

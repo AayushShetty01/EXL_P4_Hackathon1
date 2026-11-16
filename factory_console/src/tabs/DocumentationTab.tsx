@@ -128,7 +128,8 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
   )
 }
 
-function EvidenceButton({ evidence, onClick }: { evidence: Evidence; onClick: (evidence: Evidence) => void }) {
+function EvidenceButton({ evidence, onClick }: { evidence: Evidence | null; onClick: (evidence: Evidence) => void }) {
+  if (!evidence) return <p className="mt-2 text-xs text-slate-500">No evidence cited</p>
   return (
     <button
       type="button"

@@ -5,7 +5,7 @@ export interface MonitoringBatch {
   batch: string
   n: number
   psi_score: number
-  max_csi: { feature: string; csi: number }
+  max_csi: { feature: string; csi: number } | null
   auc: number | null
   observed_default_rate: number | null
   mean_pd: number
