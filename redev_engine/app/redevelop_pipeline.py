@@ -147,6 +147,44 @@ def generated_files(out_dir: Path) -> list[GeneratedFile]:
             for name, kind in FILE_KINDS.items() if (out_dir / name).exists()]
 
 
+def heal_until_done(request: RedevelopRequest, manifest: dict, model_dir: Path, out_dir: Path, code: str, tests: str,
+                    coefficients: dict[str, float], result: RedevelopResult) -> tuple[str, Evaluation, str]:
+    """Evaluate and heal until the model is good, the healer stops changing it, or the iterations run out.
+
+    Returns the best attempt (not simply the last), its evaluation, and a note when an earlier attempt was kept.
+    """
+    has_golden = bool(manifest.get("golden"))
+    best_code, best_rank, best_number = code, None, 1
+    for number in range(1, request.max_heal_iterations + 2):
+        evaluation = evaluate(code, tests, manifest, model_dir, out_dir)
+        iteration = Iteration(iteration=number, unit_tests_passed=evaluation.tests_passed,
+                              unit_tests_failed=evaluation.tests_failed,
+                              parity_passed=bool(evaluation.outcome and evaluation.outcome.parity.passed),
+                              max_abs_diff_pd=max_pd_diff(evaluation), diagnosis=None, fix_applied=None)
+        result.iterations.append(iteration)
+        if best_rank is None or attempt_rank(evaluation) >= best_rank:
+            best_code, best_rank, best_number = code, attempt_rank(evaluation), number
+        if evaluation.all_good(has_golden) or number > request.max_heal_iterations:
+            break
+        healed, response = heal_once(manifest, model_dir, code, evaluation, request.use_pitfall_library, number)
+        result.llm_trace.append(LLMTraceEntry(**response.trace()))
+        iteration.diagnosis, iteration.fix_applied = healed.diagnosis, healed.fix_applied
+        healed_code = code_translator.inject_coefficients(healed.model_code, coefficients)
+        if healed_code == code:
+            break  # the healer changed nothing, so another evaluation and LLM call would repeat this one
+        code = healed_code
+        (out_dir / "model.py").write_text(code, encoding="utf-8")
+
+    if best_code == code:
+        return code, evaluation, ""
+    # A later repair made the model worse: keep the best attempt and run it again (no LLM call) so the
+    # scores, the parity files and model.py in out_dir all belong to the version that is returned.
+    note = (f"Attempt {best_number} of {len(result.iterations)} was kept because later repairs did not "
+            "improve on it (ranked by parity, then scoring, parity levels and unit tests passed).")
+    (out_dir / "model.py").write_text(best_code, encoding="utf-8")
+    return best_code, evaluate(best_code, tests, manifest, model_dir, out_dir), note
+
+
 def run_redevelopment(request: RedevelopRequest, result: RedevelopResult, out_dir: Path) -> None:
     """The main flow; fills the result in place."""
     manifest, model_dir = load_manifest(request.estate_path)
@@ -169,36 +207,7 @@ def run_redevelopment(request: RedevelopRequest, result: RedevelopResult, out_di
     result.llm_trace.append(LLMTraceEntry(**response.trace()))
     (out_dir / "test_model.py").write_text(tests, encoding="utf-8")
 
-    best_code, best_rank, best_number = code, None, 1
-    for number in range(1, request.max_heal_iterations + 2):
-        evaluation = evaluate(code, tests, manifest, model_dir, out_dir)
-        iteration = Iteration(iteration=number, unit_tests_passed=evaluation.tests_passed,
-                              unit_tests_failed=evaluation.tests_failed,
-                              parity_passed=bool(evaluation.outcome and evaluation.outcome.parity.passed),
-                              max_abs_diff_pd=max_pd_diff(evaluation), diagnosis=None, fix_applied=None)
-        result.iterations.append(iteration)
-        if best_rank is None or attempt_rank(evaluation) >= best_rank:
-            best_code, best_rank, best_number = code, attempt_rank(evaluation), number
-        if evaluation.all_good(has_golden) or number > request.max_heal_iterations:
-            break
-        healed, response = heal_once(manifest, model_dir, code, evaluation, request.use_pitfall_library, number)
-        result.llm_trace.append(LLMTraceEntry(**response.trace()))
-        iteration.diagnosis, iteration.fix_applied = healed.diagnosis, healed.fix_applied
-        healed_code = code_translator.inject_coefficients(healed.model_code, coefficients)
-        if healed_code == code:
-            break  # the healer changed nothing, so another evaluation and LLM call would repeat this one
-        code = healed_code
-        (out_dir / "model.py").write_text(code, encoding="utf-8")
-
-    heal_note = ""
-    if best_code != code:
-        # A later repair made the model worse: keep the best attempt and run it again (no LLM call) so the
-        # scores, the parity files and model.py in out_dir all belong to the version that is returned.
-        heal_note = (f"Attempt {best_number} of {len(result.iterations)} was kept because later repairs did not "
-                     "improve on it (ranked by parity, then scoring, parity levels and unit tests passed).")
-        code = best_code
-        (out_dir / "model.py").write_text(code, encoding="utf-8")
-        evaluation = evaluate(code, tests, manifest, model_dir, out_dir)
+    code, evaluation, heal_note = heal_until_done(request, manifest, model_dir, out_dir, code, tests, coefficients, result)
 
     result.status = final_status(evaluation, has_golden)
     result.unit_tests = UnitTestSummary(total=evaluation.tests_passed + evaluation.tests_failed,

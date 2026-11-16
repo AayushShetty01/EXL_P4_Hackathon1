@@ -1,8 +1,10 @@
 """Diagnose and repair step: one LLM call that explains a parity or test failure and returns a corrected model.py."""
 
 import json
+import os
 import re
 import sys
+import tempfile
 
 import pandas as pd
 from pydantic import BaseModel
@@ -38,7 +40,10 @@ def stable_text(text: str) -> str:
 
     Removes the temporary sandbox folder, the Python and repository paths, pytest run times and memory addresses.
     """
-    text = re.sub(r"[^\s'\"]*redev_sandbox_\w+", "<sandbox>", text)
+    temp_folders = {tempfile.gettempdir(), os.path.realpath(tempfile.gettempdir())}
+    for folder in sorted(temp_folders, key=len, reverse=True):
+        text = text.replace(folder, "<tmp>")
+    text = re.sub(r"<tmp>/redev_sandbox_\w+", "<sandbox>", text)
     for path, label in ((sys.prefix, "<python>"), (sys.base_prefix, "<python>"), (str(REPO_ROOT), "<repo>")):
         text = text.replace(path, label)
     text = re.sub(r" in \d+(?:\.\d+)?s(?: \(\d+:\d\d:\d\d\))?", " in <time>", text)
