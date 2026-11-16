@@ -4,7 +4,6 @@ Every factual sentence is a claim with file and line evidence that the evidence 
 Claims without evidence are SME_INPUT_NEEDED. Groundedness is computed by code, never by the LLM.
 """
 
-import json
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -12,7 +11,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 from app.agents.evidence_verifier import EvidenceReply, verify_evidence
-from app.agents.source_context import dictionary_path, numbered_files, source_paths
+from app.agents.source_context import dictionary_path, numbered_files, prompt_json, source_paths
 from app.api_schemas import InventoryRecord
 from app.audit_trail import AuditRecorder
 from app.config import Settings
@@ -106,9 +105,8 @@ class DocumentationDraft:
 
 
 def record_context(record: InventoryRecord) -> str:
-    """The approved inventory record as JSON, without the live pipeline fields."""
-    payload = record.model_dump(mode="json", exclude={"pipeline_status", "revalidation_required", "source_files"})
-    return json.dumps(payload, indent=1, sort_keys=True)
+    """The approved inventory record as JSON, without the source file list and the run specific fields."""
+    return prompt_json(record.model_dump(mode="json"), frozenset({"source_files"}))
 
 
 def section_prompt(section_id: str, title: str, guidance: str, record_text: str, files_text: str) -> str:

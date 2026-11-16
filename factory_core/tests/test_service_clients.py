@@ -103,6 +103,25 @@ def test_timeout_is_reported(settings: Settings) -> None:
     with pytest.raises(ServiceCallError) as raised:
         clients.redevelop(REDEVELOP_REQUEST)
     assert raised.value.code == "SERVICE_TIMEOUT"
+    assert f"gave no answer within {settings.redevelop_timeout_seconds:.0f} seconds" in str(raised.value)
+
+
+def test_redevelop_waits_longer_than_the_other_calls(settings: Settings) -> None:
+    """POST /redevelop uses REDEVELOP_TIMEOUT_SECONDS; validation_lab calls keep the 600 second timeout."""
+    waits: dict[str, float] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        """Note the read timeout of each call, then answer like a timeout."""
+        waits[request.url.path] = request.extensions["timeout"]["read"]
+        raise httpx.ReadTimeout("timed out", request=request)
+
+    clients = live_clients(dataclasses.replace(settings, redevelop_timeout_seconds=1234.0), handler)
+    with pytest.raises(ServiceCallError) as raised:
+        clients.redevelop(REDEVELOP_REQUEST)
+    assert "within 1234 seconds" in str(raised.value)
+    with pytest.raises(ServiceCallError):
+        clients.validate(ValidateRequest.model_validate(load_example("validate_request.json")))
+    assert waits == {"/redevelop": 1234.0, "/validate": 600.0}
 
 
 def test_error_body_from_the_service_is_passed_on(settings: Settings) -> None:

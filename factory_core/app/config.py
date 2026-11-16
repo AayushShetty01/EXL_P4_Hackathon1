@@ -16,6 +16,7 @@ SERVICE_NAME = "factory_core"
 SERVICE_VERSION = "0.1.0"
 DASHBOARD_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
 LLM_MODES = ("live", "replay")
+DEFAULT_REDEVELOP_TIMEOUT_SECONDS = 2400.0
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,7 @@ class Settings:
     validation_lab_url: str
     use_stubs: bool
     mlflow_tracking_uri: str
+    redevelop_timeout_seconds: float = DEFAULT_REDEVELOP_TIMEOUT_SECONDS
     allowed_origins: tuple[str, ...] = DASHBOARD_ORIGINS
 
 
@@ -83,7 +85,18 @@ def load_settings() -> Settings:
         validation_lab_url=environment.get("VALIDATION_LAB_URL", "http://localhost:8002"),
         use_stubs=parse_bool(environment.get("USE_STUBS", "false")),
         mlflow_tracking_uri=environment.get("MLFLOW_TRACKING_URI", ""),
+        redevelop_timeout_seconds=redevelop_timeout(environment.get("REDEVELOP_TIMEOUT_SECONDS", "")),
     )
+
+
+def redevelop_timeout(text: str) -> float:
+    """Seconds to wait for POST /redevelop: the default when empty, otherwise a positive number."""
+    if not text.strip():
+        return DEFAULT_REDEVELOP_TIMEOUT_SECONDS
+    seconds = float(text)
+    if seconds <= 0:
+        raise ValueError(f"REDEVELOP_TIMEOUT_SECONDS must be above 0, got {text!r}")
+    return seconds
 
 
 def request_settings(request: Request) -> Settings:

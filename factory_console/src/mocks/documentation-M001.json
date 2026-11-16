@@ -184,6 +184,21 @@
         "quote": "score"
       },
       "status": "UNVERIFIED"
+    },
+    {
+      "id": "D004",
+      "severity": "LOW",
+      "topic": "Data source and population",
+      "legacy_doc_says": "The document describes the development sample as all active card accounts.",
+      "code_says": "No code cites the population filter, so the claim cannot be checked against the code.",
+      "legacy_evidence": {
+        "file": "model_estate/M001_cc_pd_scorecard_sas/docs/model_document_2021.md",
+        "start_line": 1,
+        "end_line": 1,
+        "quote": "2021"
+      },
+      "code_evidence": null,
+      "status": "UNVERIFIED"
     }
   ],
   "markdown_path": "artifacts/M001/document/model_document.md"

@@ -1,4 +1,7 @@
-"""The pipeline runner: background runs, run ids, resuming after a restart, and recovering stuck stages."""
+"""The pipeline runner: background runs, run ids, resuming after a restart, recovering stuck stages, replay."""
+
+import dataclasses
+from datetime import datetime
 
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
@@ -6,6 +9,7 @@ from sqlmodel import Session, select
 from app.database import StageRunRow
 from app.main import create_app
 from app.pipeline_runner import INTERRUPTED
+from scripts.seed_demo import seed
 from tests.conftest import decide, live_settings, pipeline_provider, stage_statuses
 
 
@@ -58,3 +62,27 @@ def test_stage_left_running_by_a_crash_is_failed_at_startup(hero_estate) -> None
     with TestClient(make_app(hero_estate)) as restarted:
         run = restarted.get(f"/api/runs/{run_id}").json()
     assert (run["status"], run["stages"][1]["status"], run["stages"][1]["error"]) == ("FAILED", "FAILED", INTERRUPTED)
+
+
+class NextYear(datetime):
+    """The clock of the replay run: one year after the recording, so every timestamp differs."""
+
+    @classmethod
+    def now(cls, tz=None):
+        """A fixed time one year later."""
+        return datetime(2027, 11, 15, 9, 30, tzinfo=tz)
+
+
+def test_a_recorded_run_replays_on_a_fresh_database_later(hero_estate, tmp_path, monkeypatch) -> None:
+    """Record one full run, then repeat it from the cache alone: new database, later clock, no provider, no key."""
+    assert seed(live_settings(hero_estate), context_options={"llm_provider": pipeline_provider()}) == 0
+    monkeypatch.setattr("app.database.datetime", NextYear)
+    replay = dataclasses.replace(
+        hero_estate,
+        llm_mode="replay",
+        llm_api_key="",
+        llm_model="",
+        database_path=tmp_path / "replay.db",
+        checkpoints_path=tmp_path / "replay_checkpoints.db",
+    )
+    assert seed(replay) == 0

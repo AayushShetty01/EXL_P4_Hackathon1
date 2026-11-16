@@ -28,14 +28,17 @@ INPUT_COLUMNS = [...]            # raw columns the model reads
 DEPLOYED_COEFFICIENTS = {{}}     # leave exactly this empty dict: the legacy values are inserted later
 def prepare(df): ...             # raw DataFrame in, DataFrame of model variables out (keep ID)
 def fit(dev_df): ...             # re-estimates the model, returns {{"coefficients": {{name: value}}}}
-def score(df, coefficients=None): ...  # DataFrame with columns ID, pd, score, decision
+def score(df, coefficients=None): ...  # raw DataFrame in, DataFrame with columns ID, pd, score, decision out
 
 Rules:
 - score() uses DEPLOYED_COEFFICIENTS when coefficients is None.
+- score() receives the raw data (the columns of the data file) and calls prepare() itself.
 - Coefficient names must be exactly: {coefficient_names}
 - pd is the probability of the bad event. score is an integer (0 if the legacy model has no score).
   decision is the string APPROVE or DECLINE.
 - fit() must estimate without regularisation (use statsmodels) and model the same event as the legacy code.
+  Fit to full convergence like R glm and SAS PROC LOGISTIC: sm.GLM(y, X, family=sm.families.Binomial()).fit()
+  or sm.Logit(y, X).fit(method="newton", maxiter=100, disp=0). Never the default BFGS, which can stop early.
 - Imports allowed: pandas, numpy, math, statsmodels, scipy, sklearn, typing, dataclasses. Nothing else.
   No file access, no eval or exec, no names or attributes that start with two underscores,
   no main block.
@@ -133,7 +136,8 @@ def translate(manifest: dict, model_dir: Path, spec: dict, use_pitfalls: bool) -
     return response.parsed, response
 
 
-def write_notes(path: Path, manifest: dict, spec: dict, pitfalls_applied: list[str], notes: str, problems: list[str]) -> None:
+def write_notes(path: Path, manifest: dict, spec: dict, pitfalls_applied: list[str], notes: str, problems: list[str],
+                heal_note: str = "") -> None:
     """Write translation_notes.md: what was translated, which pitfalls applied, open questions."""
     lines = [
         f"# Translation notes, model {manifest['model_id']}",
@@ -152,6 +156,8 @@ def write_notes(path: Path, manifest: dict, spec: dict, pitfalls_applied: list[s
         "",
         *([f"* {q}" for q in spec.get("open_questions", [])] or ["* None"]),
     ]
+    if heal_note:
+        lines += ["", "## Kept version", "", heal_note]
     if problems:
         lines += ["", "## Source references that could not be verified", "", *[f"* {p}" for p in problems]]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

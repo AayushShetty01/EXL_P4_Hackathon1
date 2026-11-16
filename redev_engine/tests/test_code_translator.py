@@ -68,6 +68,17 @@ def test_translate_prompt_carries_interface_and_pitfalls(tiny_estate, fake_llm):
     assert "R_CUT_INTERVALS" not in fake_llm[1][1]["user"]
 
 
+def test_translate_prompt_requires_a_converging_fit_and_raw_scoring(tiny_estate, fake_llm):
+    """The interface says fit() converges with Newton or IRLS and score() takes raw data and calls prepare()."""
+    folder, manifest = tiny_estate
+    fake_llm[0]["translate"] = {"model_code": REFERENCE_MODEL, "pitfalls_applied": [], "notes": ""}
+    translate(manifest, folder, SPEC_REPLY, use_pitfalls=False)
+    prompt = fake_llm[1][0]["user"]
+    assert "sm.GLM(y, X, family=sm.families.Binomial()).fit()" in prompt and 'method="newton"' in prompt
+    assert "Never the default BFGS" in prompt
+    assert "score() receives the raw data (the columns of the data file) and calls prepare() itself." in prompt
+
+
 def test_notes_list_pitfalls_and_open_questions(tiny_estate, tmp_path):
     """translation_notes.md lists applied pitfalls, open questions and unverified references."""
     folder, manifest = tiny_estate

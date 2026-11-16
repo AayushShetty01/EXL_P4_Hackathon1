@@ -4,7 +4,7 @@ import json
 
 from sqlalchemy import Engine
 
-from app.agents.validator_agent import write_narrative
+from app.agents.validator_agent import user_prompt, write_narrative
 from app.api_schemas import InventoryRecord
 from app.audit_trail import AuditRecorder
 from app.config import Settings
@@ -88,3 +88,21 @@ def test_separate_validator_model_is_used_when_set(settings: Settings, engine: E
     )
     assert seen == ["independent-model"]
     assert outcome.validator_model == "independent-model"
+
+
+def test_prompt_is_the_same_in_every_run() -> None:
+    """A later run with a new run id, duration and timestamps gives the same prompt, so replay can answer it."""
+    result, record = load_example("validation_result.M001.json"), load_example("inventory_record.M001.json")
+    later_result = result | {"run_id": "run_M001_007", "duration_seconds": 99.0}
+    later_record = record | {"created_at": "2027-01-01T00:00:00Z", "updated_at": "2027-01-02T00:00:00Z"}
+
+    def prompt(result_payload: dict, record_payload: dict) -> str:
+        """The validator prompt for one pair of payloads."""
+        return user_prompt(
+            ValidationResult.model_validate(result_payload),
+            InventoryRecord.model_validate(record_payload),
+            "Holdout sample only.",
+            None,
+        )
+
+    assert prompt(later_result, later_record) == prompt(result, record)

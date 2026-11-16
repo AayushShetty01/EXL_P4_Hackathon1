@@ -1,8 +1,9 @@
 """Calls to redev_engine and validation_lab, with a stub mode for working without them.
 
 USE_STUBS=true returns the contract examples with model_id and run_id replaced. Otherwise each call
-goes over HTTP with a 600 second timeout, and every failure becomes a ServiceCallError whose
-message is ready to show as the stage error.
+goes over HTTP with a 600 second timeout (POST /redevelop: REDEVELOP_TIMEOUT_SECONDS, default 2400,
+because a live rebuild with healing takes many LLM calls), and every failure becomes a
+ServiceCallError whose message is ready to show as the stage error.
 """
 
 import json
@@ -81,6 +82,7 @@ class ServiceClients:
             request,
             RedevelopResult,
             lambda: self._stub("redevelop_result.M001.json", RedevelopResult, request.model_id, request.run_id),
+            timeout=self.settings.redevelop_timeout_seconds,
         )
 
     def validate(self, request: ValidateRequest) -> ValidationResult:
@@ -145,12 +147,16 @@ class ServiceClients:
         request: BaseModel,
         response_type: type[ResponseModel],
         stub: Callable[[], ResponseModel],
+        timeout: float = SERVICE_TIMEOUT_SECONDS,
     ) -> ResponseModel:
         """Answer from the stub or the real service, and report the outcome of the call."""
         started = time.perf_counter()
         summary: dict[str, Any] = {"service": service, "endpoint": f"POST {path}", "stub": self.settings.use_stubs}
         try:
-            result = stub() if self.settings.use_stubs else self._post(service, base_url, path, request, response_type)
+            if self.settings.use_stubs:
+                result = stub()
+            else:
+                result = self._post(service, base_url, path, request, response_type, timeout)
         except ServiceCallError as error:
             self._report(summary | {"outcome": error.code, "message": str(error)}, started)
             raise
@@ -173,11 +179,17 @@ class ServiceClients:
         return response_type.model_validate(replace_identifiers(example, model_id, run_id))
 
     def _post(
-        self, service: str, base_url: str, path: str, request: BaseModel, response_type: type[ResponseModel]
+        self,
+        service: str,
+        base_url: str,
+        path: str,
+        request: BaseModel,
+        response_type: type[ResponseModel],
+        timeout: float,
     ) -> ResponseModel:
         """Send one request and check the reply against the contract."""
         try:
-            with httpx.Client(base_url=base_url, timeout=SERVICE_TIMEOUT_SECONDS, transport=self.transport) as client:
+            with httpx.Client(base_url=base_url, timeout=timeout, transport=self.transport) as client:
                 response = client.post(path, json=request.model_dump(mode="json"))
         except httpx.ConnectError as error:
             raise ServiceCallError(
@@ -187,7 +199,7 @@ class ServiceClients:
             ) from error
         except httpx.TimeoutException as error:
             raise ServiceCallError(
-                service, "SERVICE_TIMEOUT", f"POST {path} gave no answer within {SERVICE_TIMEOUT_SECONDS:.0f} seconds"
+                service, "SERVICE_TIMEOUT", f"POST {path} gave no answer within {timeout:.0f} seconds"
             ) from error
         except httpx.HTTPError as error:
             raise ServiceCallError(service, "SERVICE_ERROR", f"POST {path} failed: {error}") from error

@@ -54,15 +54,47 @@ def test_legacy_coefficients_are_injected_by_code(tiny_estate, fake_llm, setting
 
 
 def test_failure_is_reported_honestly(tiny_estate, fake_llm, settings_env):
-    """When healing never fixes the model the status is PARITY_FAILED and result.json says so."""
+    """When every heal changes the code but never fixes it, all iterations run and the status is PARITY_FAILED."""
     folder, _ = tiny_estate
-    script_replies(fake_llm[0], ROUNDING_BUG_MODEL, healed_model=ROUNDING_BUG_MODEL)
+    script, calls = fake_llm
+    script_replies(script, ROUNDING_BUG_MODEL)
+    script["heal"] = [{"diagnosis": "d", "fix_applied": f"attempt {n}", "model_code": f"{ROUNDING_BUG_MODEL}\n# attempt {n}\n"}
+                      for n in (1, 2)]
     result = redevelop(request_for(folder, heal=2))
     assert result.status == "PARITY_FAILED"
     assert len(result.iterations) == 3 and not result.parity.passed
+    assert [c["step"] for c in calls][-2:] == ["heal_1", "heal_2"]
     assert result.parity.mismatch_sample_path
     stored = json.loads((settings_env / "artifacts" / "T001" / "redevelop" / "result.json").read_text())
     assert stored["status"] == "PARITY_FAILED"
+
+
+def test_heal_stops_when_the_code_is_unchanged(tiny_estate, fake_llm):
+    """A healer that returns model.py unchanged ends the loop: no repeated evaluation and no further LLM call."""
+    folder, _ = tiny_estate
+    script, calls = fake_llm
+    script_replies(script, ROUNDING_BUG_MODEL, healed_model=ROUNDING_BUG_MODEL)
+    result = redevelop(request_for(folder, heal=3))
+    assert [c["step"] for c in calls] == ["analyze", "translate", "write_tests", "heal_1"]
+    assert result.status == "PARITY_FAILED" and len(result.iterations) == 1
+    assert result.iterations[0].diagnosis and result.unit_tests.failed == 1
+
+
+def test_a_worse_repair_is_not_kept(tiny_estate, fake_llm, settings_env):
+    """When a repair breaks scoring, the earlier and better attempt is returned, run again and named in the notes."""
+    folder, _ = tiny_estate
+    script, calls = fake_llm
+    broken = ROUNDING_BUG_MODEL.replace('c["x2"] * m["x2"]', 'c["not_a_coefficient"] * m["x2"]')
+    script_replies(script, ROUNDING_BUG_MODEL, healed_model=broken)
+    result = redevelop(request_for(folder, heal=1))
+    out_dir = settings_env / "artifacts" / "T001" / "redevelop"
+    assert [c["step"] for c in calls] == ["analyze", "translate", "write_tests", "heal_1"]
+    assert len(result.iterations) == 2
+    assert result.iterations[0].max_abs_diff_pd is not None and result.iterations[1].max_abs_diff_pd is None  # scoring broke
+    assert result.status == "PARITY_FAILED" and result.error is None
+    assert result.unit_tests.passed == result.iterations[0].unit_tests_passed
+    assert "np.round(500" in (out_dir / "model.py").read_text() and "not_a_coefficient" not in (out_dir / "model.py").read_text()
+    assert "Attempt 1 of 2 was kept" in (out_dir / "translation_notes.md").read_text()
 
 
 def test_no_golden_gives_translated_no_golden(tiny_estate, fake_llm):

@@ -88,7 +88,7 @@ export function MonitoringTab({ modelId }: { modelId: string }) {
                     <th scope="row" className="px-4 py-3 font-medium text-slate-800">{batch.batch}</th>
                     <td className="px-4 py-3">{batch.n.toLocaleString()}</td>
                     <td className="px-4 py-3">{formatMetric(batch.psi_score)}</td>
-                    <td className="px-4 py-3">{batch.max_csi.feature}: {formatMetric(batch.max_csi.csi)}</td>
+                    <td className="px-4 py-3">{batch.max_csi ? `${batch.max_csi.feature}: ${formatMetric(batch.max_csi.csi)}` : 'None'}</td>
                     <td className="px-4 py-3">{formatMetric(batch.auc)}</td>
                     <td className="px-4 py-3">{formatPercent(batch.observed_default_rate)}</td>
                     <td className="px-4 py-3">{formatPercent(batch.mean_pd)}</td>

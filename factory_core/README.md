@@ -37,6 +37,7 @@ How the three design rules are enforced here:
 | `app/validation_lab_schemas.py` | Validate and report shapes of validation_lab (section 9.2) |
 | `app/monitoring_schemas.py` | Monitoring shapes of validation_lab (section 9.2) |
 | `app/llm_client.py` | One way to call the LLM, with the reply cache, replay mode, retries and JSON validation (section 12) |
+| `app/provider_errors.py` | Reads a provider error: its own message and suggested retry delay (a used up daily quota stops at once) |
 | `app/audit_trail.py` | Append only, hash chained audit trail, its verification, and the recorder the stages use |
 | `app/artifact_store.py` | Writes run outputs under `artifacts/` and records each write in the audit trail |
 | `app/estate_scanner.py` | Finds model folders, reads manifests and the register, registers models, safe file reader |
@@ -54,7 +55,7 @@ How the three design rules are enforced here:
 | `app/agents/documentation_agent.py` | Stamp 2: the ten section document, one LLM call per section, claim markers and groundedness |
 | `app/agents/document_drift.py` | Differences between the old model document and the code, both sides verified |
 | `app/agents/evidence_verifier.py` | Checks quotes against the cited lines and corrects line numbers (no LLM) |
-| `app/agents/source_context.py` | Model files with numbered lines for the agents' prompts |
+| `app/agents/source_context.py` | Model files with numbered lines for the agents' prompts, and records as prompt JSON without run specific fields (timestamps, run id, duration), so replay mode works on a fresh database |
 | `app/agents/validator_agent.py` | The independent validator narrative |
 | `app/agents/number_grounding.py` | Checks every number of the narrative against the computed results (no LLM) |
 | `app/agents/compliance_matrix.py` | The SS1/23 matrix: the expectations under the five principles and how the matrix is built |
@@ -119,6 +120,7 @@ Read from the root `.env` (see `.env.example` in the repository root). Values al
 | `USE_STUBS` | `true`: answer redev_engine and validation_lab calls from `contracts/examples/` | `false` |
 | `REDEV_ENGINE_URL` | redev_engine address | `http://localhost:8001` |
 | `VALIDATION_LAB_URL` | validation_lab address | `http://localhost:8002` |
+| `REDEVELOP_TIMEOUT_SECONDS` | How long to wait for `POST /redevelop`; a live rebuild with healing can take over 20 minutes. Other service calls wait 600 seconds | `2400` |
 | `ESTATE_DIR` | Model estate folder, relative to the repository root | `model_estate` |
 | `ARTIFACTS_DIR` | Run outputs and the databases, relative to the repository root | `artifacts` |
 | `MLFLOW_TRACKING_URI` | Optional MLflow tracking | empty |
@@ -167,6 +169,7 @@ A stage that fails (an LLM error, a service that is down, parity not reached, a 
 * **Scores for validation.** A rebuild with status `PARITY_PASSED` or `TRANSLATED_NO_GOLDEN` (translated, tested and scored, but no legacy outputs exist, as for M001) is validated on its own scores in `artifacts/{model_id}/redevelop/`, and the report's parity summary says which. A model that was not redeveloped is validated on the golden files in the estate. `PARITY_FAILED` and `ERROR` stop the run at the redevelop stage.
 * **Independence.** The validate gate cannot be approved by the reviewer (any letter case) who approved the redevelop gate of the same run, or of the latest earlier run when this run has no redevelop stage. A rejection is always allowed.
 * **Before discovery.** A registered model that has not been through the discover stage has an InventoryRecord with only the register and file facts. `model_type`, `purpose`, `algorithm`, `target_variable`, `tiering`, `doc_status` and `next_validation_due` are `null` and the lists are empty; in ModelSummary `model_type`, `algorithm`, `tier` and `doc_status` can be `null`. Discovery also returns `null` with an open question when the files do not answer a field, and adds an open question for every field it filled without evidence.
+* **Drift evidence.** In `doc_drift.json` and the `drift` list of `/api/models/{model_id}/documentation`, `legacy_evidence` or `code_evidence` of an item can be `null`: the agent cited nothing for that side, or cited a file other than the old document (legacy side) or the code files (code side). Such an item is `UNVERIFIED`.
 * **Artifact links.** `{path}` in `/api/artifacts/{path}` is relative to `artifacts/`, so a payload path such as `artifacts/M001/validation/charts/roc_oot.png` becomes `/api/` followed by that path. A leading `artifacts/` is accepted either way.
 * **Sample model.** While `model_estate/` holds no models, the service registers M001 from the contract examples, with its example run and outputs. Its name ends with "(sample from contract examples)", its values are illustrative and never results, it cannot be run or decided on (`409 SAMPLE_MODEL`), and it writes no audit events. It is removed as soon as a scan finds real models.
 * **Metrics.** `avg_groundedness` and `avg_agent_minutes_per_model` are `null` until there is data. `docs_outdated_at_discovery` counts records with `doc_status` `OUTDATED` or `MISSING`. `human_review_minutes_logged` leaves out runs started with `auto_approve`.

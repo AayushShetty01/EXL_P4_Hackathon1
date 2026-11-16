@@ -22,8 +22,8 @@ export interface DocDriftItem {
   topic: string
   legacy_doc_says: string
   code_says: string
-  legacy_evidence: Evidence
-  code_evidence: Evidence
+  legacy_evidence: Evidence | null
+  code_evidence: Evidence | null
   status: 'VERIFIED' | 'UNVERIFIED'
 }
 
