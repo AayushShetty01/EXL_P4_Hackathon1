@@ -13,6 +13,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 from app.agents.number_grounding import grounding_score, source_values
+from app.agents.source_context import prompt_json
 from app.api_schemas import InventoryRecord
 from app.audit_trail import AuditRecorder
 from app.llm_client import LLMClient
@@ -60,12 +61,15 @@ class ValidatorOutcome:
 def user_prompt(
     result: ValidationResult, record: InventoryRecord, limitations: str | None, parity: ParitySummary | None
 ) -> str:
-    """The validator's input: results without chart data, the record, the limitations and the parity facts."""
-    results = result.model_dump(mode="json", exclude={"series", "charts"})
-    inventory = record.model_dump(mode="json", exclude={"source_files", "field_evidence", "pipeline_status"})
+    """The validator's input: results without chart data, the record, the limitations and the parity facts.
+
+    Run specific fields (timestamps, run id, duration) are left out, so replay mode can serve the reply.
+    """
+    results = prompt_json(result.model_dump(mode="json"), frozenset({"series", "charts"}))
+    inventory = prompt_json(record.model_dump(mode="json"), frozenset({"source_files", "field_evidence"}))
     return (
-        f"Validation results:\n{json.dumps(results, indent=1, sort_keys=True)}\n\n"
-        f"Inventory record:\n{json.dumps(inventory, indent=1, sort_keys=True)}\n\n"
+        f"Validation results:\n{results}\n\n"
+        f"Inventory record:\n{inventory}\n\n"
         f"Documented limitations:\n{limitations or 'No documentation is available.'}\n\n"
         f"Parity summary:\n{json.dumps(parity.model_dump(mode='json') if parity else None, sort_keys=True)}"
     )

@@ -7,7 +7,14 @@ import pytest
 from sqlalchemy import Engine
 from sqlmodel import Session
 
-from app.agents.documentation_agent import SECTIONS, SectionReply, check_claims, render_markdown, write_documentation
+from app.agents.documentation_agent import (
+    SECTIONS,
+    SectionReply,
+    check_claims,
+    record_context,
+    render_markdown,
+    write_documentation,
+)
 from app.api_schemas import InventoryRecord
 from app.audit_trail import AuditRecorder
 from app.config import Settings
@@ -155,3 +162,12 @@ def test_render_markdown_lists_sections_claims_and_drift() -> None:
     assert "## Methodology" in text
     assert "| C014 | VERIFIED |" in text
     assert "| D001 | HIGH | Decision cutoff |" in text
+
+
+def test_record_context_is_the_same_in_every_run(approved_record: InventoryRecord) -> None:
+    """A later run of the same model gives the same section prompts, so replay can answer them."""
+    later = InventoryRecord.model_validate(
+        approved_record.model_dump(mode="json")
+        | {"created_at": "2027-01-01T00:00:00Z", "updated_at": "2027-01-02T00:00:00Z", "revalidation_required": True}
+    )
+    assert record_context(later) == record_context(approved_record)

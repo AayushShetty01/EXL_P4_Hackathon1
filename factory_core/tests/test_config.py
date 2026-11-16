@@ -36,6 +36,27 @@ def test_load_settings_reads_the_environment(monkeypatch: pytest.MonkeyPatch) ->
     assert settings.database_path == settings.artifacts_dir / "factory_core.db"
 
 
+@pytest.mark.parametrize(("text", "expected"), [(None, 2400.0), ("", 2400.0), ("1800", 1800.0)])
+def test_redevelop_timeout_is_read_from_the_environment(
+    monkeypatch: pytest.MonkeyPatch, text: str | None, expected: float
+) -> None:
+    """REDEVELOP_TIMEOUT_SECONDS sets the wait for POST /redevelop; unset or empty gives 2400 seconds."""
+    monkeypatch.setattr(config, "load_dotenv", lambda *args, **kwargs: False)
+    monkeypatch.delenv("REDEVELOP_TIMEOUT_SECONDS", raising=False)
+    if text is not None:
+        monkeypatch.setenv("REDEVELOP_TIMEOUT_SECONDS", text)
+    assert load_settings().redevelop_timeout_seconds == expected
+
+
+@pytest.mark.parametrize("text", ["0", "-5", "soon"])
+def test_bad_redevelop_timeout_is_rejected(monkeypatch: pytest.MonkeyPatch, text: str) -> None:
+    """A redevelop timeout that is not a positive number stops the service at startup."""
+    monkeypatch.setattr(config, "load_dotenv", lambda *args, **kwargs: False)
+    monkeypatch.setenv("REDEVELOP_TIMEOUT_SECONDS", text)
+    with pytest.raises(ValueError):
+        load_settings()
+
+
 def test_unknown_llm_mode_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
     """LLM_MODE must be live or replay."""
     monkeypatch.setattr(config, "load_dotenv", lambda *args, **kwargs: False)

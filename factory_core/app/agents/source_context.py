@@ -1,15 +1,26 @@
 """Formats model files with numbered lines for the agents' prompts (format L0012: text).
 
 Files are read through the safe reader, so prompts never contain the answer keys or files outside the
-estate and artifacts folders.
+estate and artifacts folders. Records and results go into prompts without the fields that change from run
+to run, so the same work always gives the same prompt and replay mode can serve the recorded reply.
 """
 
+import json
 from typing import Any
 
 from app.config import Settings
 from app.estate_scanner import read_text_file
 
 MAX_LINES_PER_FILE = 800
+RUN_SPECIFIC_FIELDS = frozenset(
+    {"created_at", "updated_at", "revalidation_required", "pipeline_status", "run_id", "duration_seconds"}
+)
+
+
+def prompt_json(payload: dict[str, Any], leave_out: frozenset[str] = frozenset()) -> str:
+    """A record or result as prompt JSON, without the fields that change from run to run."""
+    kept = {key: value for key, value in payload.items() if key not in RUN_SPECIFIC_FIELDS | leave_out}
+    return json.dumps(kept, indent=1, sort_keys=True)
 
 
 def numbered_file(settings: Settings, path: str, max_lines: int = MAX_LINES_PER_FILE) -> str:
