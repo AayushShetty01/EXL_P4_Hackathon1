@@ -15,6 +15,8 @@ RULES = """Write test_model.py for pytest. Rules:
 - Cover every derived variable and every bin: normal values, bin boundaries, zero denominators and missing values.
 - Cover score scaling, rounding at exact halves and the decision cutoff boundary.
 - When calling model.score, pass an explicit coefficients dict with the same names that fit() returns.
+- Call model.score with raw rows (the columns of the data file); score() calls prepare() itself.
+- Check the model variables that prepare() returns, but never assert the exact list or order of its columns.
 - Imports allowed: pytest, model, pandas, numpy, math. No file access, no names starting with two underscores.
 - Every test has a one line docstring that states the legacy behaviour it checks.
 - The file starts with the docstring '\"\"\"Unit tests for the Python rebuild of model {model_id}.\"\"\"'.

@@ -12,3 +12,5 @@ def test_write_tests_returns_code_and_sends_rules(tiny_estate, fake_llm):
     prompt = fake_llm[1][0]["user"]
     assert code == PASSING_TESTS and response.step == "write_tests"
     assert "zero denominators" in prompt and "=== code/model.R ===" in prompt and "def prepare(df):" in prompt
+    assert "Call model.score with raw rows" in prompt
+    assert "never assert the exact list or order of its columns" in prompt

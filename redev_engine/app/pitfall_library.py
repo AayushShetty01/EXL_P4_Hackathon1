@@ -26,7 +26,7 @@ PITFALLS: list[Pitfall] = [
     Pitfall(
         id="LOGISTIC_CONVERGENCE", language="SAS", title="Different convergence rules",
         description="SAS and Python optimisers stop on different convergence criteria, so refitted coefficients differ in the last digits.",
-        python_fix="Use statsmodels Logit or GLM with a tight tolerance (for example tol=1e-10 or maxiter=100) and compare coefficients with a tolerance, not for equality.",
+        python_fix="Fit with Newton or IRLS until convergence: sm.Logit(y, X).fit(method='newton', maxiter=100, disp=0) or sm.GLM(y, X, family=sm.families.Binomial()).fit(). Never the default BFGS, which can stop before converging. Compare coefficients with a tolerance, not for equality.",
     ),
     Pitfall(
         id="REGULARISATION_DEFAULT", language="SAS", title="scikit-learn regularises by default",
@@ -87,6 +87,11 @@ PITFALLS: list[Pitfall] = [
         id="R_CUT_INTERVALS", language="R", title="cut uses right closed intervals",
         description="cut(x, breaks) builds intervals (a, b] that include the right edge by default, and values outside the breaks become NA.",
         python_fix="Use pd.cut(x, bins=breaks, right=True) and keep the R labels such as '(12,24]'. Do not use np.digitize with its defaults.",
+    ),
+    Pitfall(
+        id="R_GLM_CONVERGENCE", language="R", title="glm fits by IRLS until convergence",
+        description="glm estimates by iteratively reweighted least squares and stops only when the deviance converges (epsilon 1e-8, up to 25 iterations). statsmodels Logit with the BFGS optimiser can stop after its default 35 iterations without converging, so refitted coefficients differ by far more than rounding.",
+        python_fix="Fit with sm.GLM(y, X, family=sm.families.Binomial()).fit(), which uses IRLS like glm, or sm.Logit(y, X).fit(method='newton', maxiter=100, disp=0), and check that the fit converged. Never the default BFGS.",
     ),
     Pitfall(
         id="R_INDEXING", language="R", title="Indexing starts at 1",

@@ -124,6 +124,14 @@ def max_pd_diff(evaluation: Evaluation) -> float | None:
     return next((level.max_abs_diff for level in evaluation.outcome.parity.levels if level.level == "L2_record_scores"), None)
 
 
+def attempt_rank(evaluation: Evaluation) -> tuple[bool, bool, int, int]:
+    """How good one attempt is, best first: parity passed, scoring ran, parity levels passed, unit tests passed."""
+    outcome = evaluation.outcome
+    levels_passed = sum(level.status == "PASSED" for level in outcome.parity.levels) if outcome else 0
+    return (bool(outcome and outcome.parity.passed), evaluation.scoring_error is None, levels_passed,
+            evaluation.tests_passed)
+
+
 def final_status(evaluation: Evaluation, has_golden: bool) -> str:
     """Honest final status from the last evaluation."""
     if evaluation.scoring_error:
@@ -161,6 +169,7 @@ def run_redevelopment(request: RedevelopRequest, result: RedevelopResult, out_di
     result.llm_trace.append(LLMTraceEntry(**response.trace()))
     (out_dir / "test_model.py").write_text(tests, encoding="utf-8")
 
+    best_code, best_rank, best_number = code, None, 1
     for number in range(1, request.max_heal_iterations + 2):
         evaluation = evaluate(code, tests, manifest, model_dir, out_dir)
         iteration = Iteration(iteration=number, unit_tests_passed=evaluation.tests_passed,
@@ -168,13 +177,28 @@ def run_redevelopment(request: RedevelopRequest, result: RedevelopResult, out_di
                               parity_passed=bool(evaluation.outcome and evaluation.outcome.parity.passed),
                               max_abs_diff_pd=max_pd_diff(evaluation), diagnosis=None, fix_applied=None)
         result.iterations.append(iteration)
+        if best_rank is None or attempt_rank(evaluation) >= best_rank:
+            best_code, best_rank, best_number = code, attempt_rank(evaluation), number
         if evaluation.all_good(has_golden) or number > request.max_heal_iterations:
             break
         healed, response = heal_once(manifest, model_dir, code, evaluation, request.use_pitfall_library, number)
         result.llm_trace.append(LLMTraceEntry(**response.trace()))
         iteration.diagnosis, iteration.fix_applied = healed.diagnosis, healed.fix_applied
-        code = code_translator.inject_coefficients(healed.model_code, coefficients)
+        healed_code = code_translator.inject_coefficients(healed.model_code, coefficients)
+        if healed_code == code:
+            break  # the healer changed nothing, so another evaluation and LLM call would repeat this one
+        code = healed_code
         (out_dir / "model.py").write_text(code, encoding="utf-8")
+
+    heal_note = ""
+    if best_code != code:
+        # A later repair made the model worse: keep the best attempt and run it again (no LLM call) so the
+        # scores, the parity files and model.py in out_dir all belong to the version that is returned.
+        heal_note = (f"Attempt {best_number} of {len(result.iterations)} was kept because later repairs did not "
+                     "improve on it (ranked by parity, then scoring, parity levels and unit tests passed).")
+        code = best_code
+        (out_dir / "model.py").write_text(code, encoding="utf-8")
+        evaluation = evaluate(code, tests, manifest, model_dir, out_dir)
 
     result.status = final_status(evaluation, has_golden)
     result.unit_tests = UnitTestSummary(total=evaluation.tests_passed + evaluation.tests_failed,
@@ -186,7 +210,8 @@ def run_redevelopment(request: RedevelopRequest, result: RedevelopResult, out_di
         result.parity = parity_certificate.write_certificate(manifest["model_id"], parity, out_dir) if has_golden else parity
     mapping, problems = code_translator.build_line_mapping(code, out_dir / "model.py", manifest, model_dir)
     result.line_mapping = mapping
-    code_translator.write_notes(out_dir / "translation_notes.md", manifest, spec, reply.pitfalls_applied, reply.notes, problems)
+    code_translator.write_notes(out_dir / "translation_notes.md", manifest, spec, reply.pitfalls_applied, reply.notes, problems,
+                                heal_note)
 
 
 def redevelop(request: RedevelopRequest) -> RedevelopResult:
